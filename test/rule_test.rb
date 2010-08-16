@@ -22,11 +22,11 @@ regarding "a rule" do
       end
   end
   
-  regarding "basics - build a rule and evaluate it against an object" do
+  regarding "basics - build a rule and satisfied_by? it against an object" do
 
-    test "basic evaluate" do
-      assert{ @red_rule.evaluate(Color.new("red")) }
-      deny  { @red_rule.evaluate(Color.new("blue")) }
+    test "basic satisfied_by?" do
+      assert{ @red_rule.satisfied_by?(Color.new("red")) }
+      deny  { @red_rule.satisfied_by?(Color.new("blue")) }
     end
 
     test "finder shorthand - instance variables" do
@@ -35,8 +35,8 @@ regarding "a rule" do
           expression("@name", Eq("blue"))
         end
 
-      assert{ blue_rule.evaluate(Color.new("blue")) }
-      deny  { blue_rule.evaluate(Color.new("red")) }
+      assert{ blue_rule.satisfied_by?(Color.new("blue")) }
+      deny  { blue_rule.satisfied_by?(Color.new("red")) }
     end
   
     test "method finder" do
@@ -45,8 +45,8 @@ regarding "a rule" do
           expression(method(:name_x), Eq("greenx"))
         end
 
-      assert{ green_rule.evaluate(Color.new("green")) }
-      deny  { green_rule.evaluate(Color.new("blue")) }
+      assert{ green_rule.satisfied_by?(Color.new("green")) }
+      deny  { green_rule.satisfied_by?(Color.new("blue")) }
     end
 
     test "finder shorthand - methods" do
@@ -55,8 +55,8 @@ regarding "a rule" do
           expression(:name_x, Eq("bluex"))
         end
 
-      assert{ blue_rule.evaluate(Color.new("blue")) }
-      deny  { blue_rule.evaluate(Color.new("red")) }
+      assert{ blue_rule.satisfied_by?(Color.new("blue")) }
+      deny  { blue_rule.satisfied_by?(Color.new("red")) }
     end
   end
   
@@ -68,16 +68,16 @@ regarding "a rule" do
     
     test "failure if object type is not the same as the type known to the rule" do
       empty_rule = Rule.new(Color)
-      assert{ empty_rule.evaluate(Color.new("zzz")) }
-      assert{ empty_rule.evaluate(Shade.new("zzz")) }
-      deny  { empty_rule.evaluate("zzz") }
+      assert{ empty_rule.satisfied_by?(Color.new("zzz")) }
+      assert{ empty_rule.satisfied_by?(Shade.new("zzz")) }
+      deny  { empty_rule.satisfied_by?("zzz") }
     end
     
     test "but a rule allowing nil should work" do
       weird_rule = Rule.new(Color) {expression("@name", Or(Nil?, Not(Nil?)))}
-      assert{ weird_rule.evaluate(Color.new("zzz")) }
-      assert{ weird_rule.evaluate(nil) }
-      deny  { weird_rule.evaluate("zzz") }
+      assert{ weird_rule.satisfied_by?(Color.new("zzz")) }
+      assert{ weird_rule.satisfied_by?(nil) }
+      deny  { weird_rule.satisfied_by?("zzz") }
     end
     
   end

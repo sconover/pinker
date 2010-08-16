@@ -23,7 +23,7 @@ module Pinker
       @expressions.push(*expressions)
     end
     
-    def evaluate(object)
+    def satisfied_by?(object)
       return false if @name_or_class.is_a?(Class) && 
                       !object.nil? && 
                       !object.is_a?(@name_or_class)
