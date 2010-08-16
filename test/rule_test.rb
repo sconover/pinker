@@ -3,6 +3,15 @@ require "./test/test_helper"
 require "pinker/rule"
 include Pinker
 
+
+  #error conditions:
+    #no predicate or rule supplied
+    #not a predicate or rule
+    #invalid finder
+    #...be helpful
+
+  #symbol (vs class)
+    #symbol plus class?
 regarding "a rule" do
 
   class Color
@@ -96,6 +105,25 @@ regarding "a rule" do
         Rule.new(Shirt) do
           expression("@size", Eq("large"))
           expression("@color", Rule.new(Color){expression("@name", Eq("red"))})
+        end
+      
+      assert{ shirt_rule.satisfied_by?(Shirt.new("large", Color.new("red"))) }
+      deny  { shirt_rule.satisfied_by?(Shirt.new("large", Color.new("blue"))) }
+      deny  { shirt_rule.satisfied_by?(Shirt.new("small", Color.new("red"))) }
+    end
+    
+    #test error: hoped-for rule not there
+    
+    
+    test "find the other rule at runtime" do
+      other_rules = {
+        Color => Rule.new(Color){expression("@name", Eq("red"))}
+      }
+      
+      shirt_rule =
+        Rule.new(Shirt, :other_rules => other_rules) do
+          expression("@size", Eq("large"))
+          expression("@color", rule(Color))
         end
       
       assert{ shirt_rule.satisfied_by?(Shirt.new("large", Color.new("red"))) }

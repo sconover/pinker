@@ -6,17 +6,20 @@ require "predicated/autogen_call"
 module Pinker
   
   class Rule
-    def initialize(name_or_class, &block)
+    def initialize(name_or_class, options={}, &block)
       @name_or_class = name_or_class
       @expressions = Expressions.new
+      @other_rules = options[:other_rules]
       
       add(&block) if block
     end
     
     def add(&block)
       expressions = nil
+      other_rules = @other_rules
       Module.new do
         extend ExpressionContext
+        @other_rules = other_rules
         instance_eval(&block)
         expressions = @expressions
       end
@@ -34,7 +37,6 @@ module Pinker
   
   module ExpressionContext
     include Predicated::CurriedShorthand
-    include Predicated::CurriedShorthand
 
     def instance_variable(symbol)
       proc{|object|object.instance_variable_get(symbol)}
@@ -44,12 +46,16 @@ module Pinker
       proc{|object|object.send(symbol)}
     end
     
-    def expression(finder, predicate)
+    def rule(key)
+      proc{@other_rules[key]}
+    end
+    
+    def expression(finder, curried_predicate_or_rule)
       finder = instance_variable(finder.to_sym) if finder.is_a?(String) && finder =~ /^@/
       finder = method(finder) if finder.is_a?(Symbol)
       
       @expressions ||= []
-      @expressions << Expression.new(finder, predicate)
+      @expressions << Expression.new(finder, curried_predicate_or_rule)
       self
     end
   end
@@ -62,6 +68,10 @@ module Pinker
     
     def evaluate(object)
       object_part = @finder.call(object)
+      if @curried_predicate_or_rule.is_a?(Proc)
+        @curried_predicate_or_rule = @curried_predicate_or_rule.call 
+      end
+      
       if @curried_predicate_or_rule.is_a?(Rule)
         @curried_predicate_or_rule.satisfied_by?(object_part)
       else
