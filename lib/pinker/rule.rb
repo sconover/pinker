@@ -30,7 +30,6 @@ module Pinker
       
       @expressions.evaluate_all(object)
     end
-    
   end
   
   module ExpressionContext
@@ -50,31 +49,31 @@ module Pinker
       finder = method(finder) if finder.is_a?(Symbol)
       
       @expressions ||= []
-      @expressions << [finder, predicate]
+      @expressions << Expression.new(finder, predicate)
       self
     end
   end
   
   class Expression
-    def initialize(finder, curried_predicate)
+    def initialize(finder, curried_predicate_or_rule)
       @finder = finder
-      @curried_predicate = curried_predicate
+      @curried_predicate_or_rule = curried_predicate_or_rule
     end
     
     def evaluate(object)
-      predicate = curried_predicate.apply(finder.call(object))
-      predicate.evaluate
+      object_part = @finder.call(object)
+      if @curried_predicate_or_rule.is_a?(Rule)
+        @curried_predicate_or_rule.satisfied_by?(object_part)
+      else
+        predicate = @curried_predicate_or_rule.apply(object_part)
+        predicate.evaluate
+      end
     end
   end
   
   class Expressions < Array
     def evaluate_all(object)
-      didnt_work = 
-        find do |finder, curried_predicate|
-          predicate = curried_predicate.apply(finder.call(object))
-          predicate.evaluate==false
-        end
-      didnt_work.nil?
+      find{|expression|expression.evaluate(object)==false}.nil?
     end
   end
 end

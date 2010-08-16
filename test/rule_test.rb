@@ -81,4 +81,27 @@ regarding "a rule" do
     end
     
   end
+
+  regarding "reference to another rule" do
+    
+    class Shirt
+      def initialize(size, color)
+        @size = size
+        @color = color
+      end
+    end
+    
+    test "should activate that rule with the found object" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          expression("@size", Eq("large"))
+          expression("@color", Rule.new(Color){expression("@name", Eq("red"))})
+        end
+      
+      assert{ shirt_rule.satisfied_by?(Shirt.new("large", Color.new("red"))) }
+      deny  { shirt_rule.satisfied_by?(Shirt.new("large", Color.new("blue"))) }
+      deny  { shirt_rule.satisfied_by?(Shirt.new("small", Color.new("red"))) }
+    end
+    
+  end
 end
