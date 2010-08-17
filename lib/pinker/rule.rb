@@ -6,6 +6,7 @@ require "predicated/autogen_call"
 module Pinker
   
   class Rule
+    attr_reader :name_or_class
     def initialize(name_or_class, options={}, &block)
       @name_or_class = name_or_class
       @other_rules = options[:other_rules]

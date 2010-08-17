@@ -5,6 +5,25 @@ module Pinker
     end
   end
   
+  module ArrayPrintSupport
+    def to_s(indent="", prefix="")
+      str = indent + prefix + "[\n"
+      
+      each_with_index do |item, i|
+        str << item.to_s(indent + "  ")
+        str << "," unless i==length-1
+        str << "\n"
+      end
+      
+      str << indent + "]"
+      str
+    end
+    
+    def inspect
+      "[" + collect{|item|item.inspect}.join(",") + "]"
+    end  
+  end
+  
   
   class Rule
     def to_s(indent="")
@@ -19,23 +38,7 @@ module Pinker
   end
   
   class Expressions
-    
-    def to_s(indent="", prefix="")
-      str = indent + prefix + "[\n"
-      
-      each_with_index do |expression, i|
-        str << expression.to_s(indent + "  ")
-        str << "," unless i==length-1
-        str << "\n"
-      end
-      
-      str << indent + "]"
-      str
-    end
-    
-    def inspect
-      "[" + collect{|expression|expression.inspect}.join(",") + "]"
-    end
+    include ArrayPrintSupport
   end
     
   class Expression

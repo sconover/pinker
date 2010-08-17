@@ -31,14 +31,22 @@ module Pinker
   module RuleContext
     def rule(name_or_class, &block)
       rule = Rule.new(name_or_class, :other_rules => @rules, &block)
-      @rules[name_or_class] = rule
+      @rules << rule
       rule
     end
   end
   
-  class Rules < Hash
+  class Rules < Array
+
+    def [](key)
+      #test for error condition - not found
+      find{|rule|rule.name_or_class==key}
+    end
+    
     def satisfies_all?(object)
-      find{|key, rule|rule.satisfied_by?(object)==false}.nil?
+      find{|rule|rule.satisfied_by?(object)==false}.nil?
     end
   end
 end
+
+require "pinker/print_grammar"
