@@ -45,6 +45,13 @@ regarding "rule printing" do
       }
     end
     
+    test "complex predicate" do
+      assert {
+        Rule.new(Shirt) {expression(:size, Or(Eq("large"),Eq("small")))}.to_s ==
+          %{Rule(Shirt)[:size->Or(Eq('large'),Eq('small'))]}
+      }
+    end
+    
   end
 
   regarding "inspect is like to_s except it's multiline, so you see the tree structure" do
@@ -98,6 +105,21 @@ regarding "rule printing" do
       @first_name->Eq('Sam')
     ]
   ]
+]
+}
+      }
+    end
+    
+    test "complex predicates chop down too" do
+      assert {
+        Rule.new(Shirt) do 
+          expression(:size, Or(Eq("large"),Eq("small")))
+        end.inspect ==
+%{Rule(Shirt)[
+  :size->Or(
+    Eq('large'),
+    Eq('small')
+  )
 ]
 }
       }

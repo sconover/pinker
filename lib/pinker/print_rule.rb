@@ -70,7 +70,9 @@ module Pinker
   end
   
   class TemplatedPredicateHolder
-    include PrintSupport
+    def inspect(indent="")
+      @templated_predicate.inspect(indent)
+    end
     
     def to_s
       @templated_predicate.to_s
