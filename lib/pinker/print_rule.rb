@@ -1,16 +1,16 @@
 module Pinker
   module PrintSupport
-    def to_s(indent="")
-      indent + inspect
+    def inspect(indent="")
+      indent + to_s
     end
   end
   
   module ArrayPrintSupport
-    def to_s(indent="", prefix="")
+    def inspect(indent="", prefix="")
       str = indent + prefix + "[\n"
       
       each_with_index do |item, i|
-        str << item.to_s(indent + "  ")
+        str << item.inspect(indent + "  ")
         str << "," unless i==length-1
         str << "\n"
       end
@@ -19,21 +19,21 @@ module Pinker
       str
     end
     
-    def inspect
-      "[" + collect{|item|item.inspect}.join(",") + "]"
+    def to_s
+      "[" + collect{|item|item.to_s}.join(",") + "]"
     end  
   end
   
   
   class Rule
-    def to_s(indent="")
-      str = @expressions.to_s(indent, "Rule(#{@name_or_class.inspect})")
+    def inspect(indent="")
+      str = @expressions.inspect(indent, "Rule(#{@name_or_class.inspect})")
       str << "\n" if indent.empty?
       str
     end
     
-    def inspect
-      "Rule(#{@name_or_class.inspect})#{@expressions.inspect}"
+    def to_s
+      "Rule(#{@name_or_class.inspect})#{@expressions.to_s}"
     end
   end
   
@@ -42,45 +42,45 @@ module Pinker
   end
     
   class Expression
-    def to_s(indent="")
-      @finder.to_s(indent) + "->" + @constraint.to_s(indent).lstrip
+    def inspect(indent="")
+      @finder.inspect(indent) + "->" + @constraint.inspect(indent).lstrip
     end
     
-    def inspect
-      @finder.inspect + "->" + @constraint.inspect
+    def to_s
+      @finder.to_s + "->" + @constraint.to_s
     end
   end
 
   class RuleReference
     include PrintSupport
     
-    def inspect
+    def to_s
       "rule(#{@rule_key.inspect})"
     end
   end
   
   class RuleHolder
-    def to_s(indent="")
-      @rule.to_s(indent)
+    def inspect(indent="")
+      @rule.inspect(indent)
     end
     
-    def inspect
-      @rule.inspect
+    def to_s
+      @rule.to_s
     end
   end
   
   class TemplatedPredicateHolder
     include PrintSupport
     
-    def inspect
-      @templated_predicate.inspect
+    def to_s
+      @templated_predicate.to_s
     end
   end
     
   class InstanceVariableFinder
     include PrintSupport
     
-    def inspect
+    def to_s
       @instance_variable_symbol.to_s
     end
   end
@@ -88,7 +88,7 @@ module Pinker
   class MethodFinder
     include PrintSupport
     
-    def inspect
+    def to_s
       @method_symbol.inspect
     end
   end
