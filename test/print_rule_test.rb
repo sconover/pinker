@@ -84,6 +84,24 @@ regarding "rule printing" do
     end
     
     test "nesting" do
+      assert {
+        Rule.new(Shirt) do 
+          expression("@color", Rule.new(:red_color_rule) do 
+                                 expression("@name", Rule.new(:name_is_sam) do        
+                                                       expression("@first_name", Eq("Sam")) 
+                                                     end) 
+                               end)
+        end.to_s ==
+%{Rule(Shirt)[
+  @color->Rule(:red_color_rule)[
+    @name->Rule(:name_is_sam)[
+      @first_name->Eq('Sam')
+    ]
+  ]
+]
+}
+      }
+
     end
   end
 end
