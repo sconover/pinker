@@ -1,5 +1,5 @@
 require "predicated/predicate"
-require "predicated/curried_predicate"
+require "predicated/simple_templated_predicate"
 require "predicated/evaluate"
 require "predicated/autogen_call"
 
@@ -8,22 +8,22 @@ module Pinker
   class Rule
     def initialize(name_or_class, options={}, &block)
       @name_or_class = name_or_class
-      @expressions = Expressions.new
       @other_rules = options[:other_rules]
+      
+      @expressions = Expressions.new
       
       add(&block) if block
     end
     
     def add(&block)
-      expressions = nil
       other_rules = @other_rules
+      expressions = @expressions
       Module.new do
         extend ExpressionContext
         @other_rules = other_rules
+        @expressions = expressions
         instance_eval(&block)
-        expressions = @expressions
       end
-      @expressions.push(*expressions)
     end
     
     def satisfied_by?(object)
@@ -34,56 +34,114 @@ module Pinker
       @expressions.evaluate_all(object)
     end
   end
-  
+    
   module ExpressionContext
-    include Predicated::CurriedShorthand
+    include Predicated::SimpleTemplatedShorthand
 
     def instance_variable(symbol)
-      proc{|object|object.instance_variable_get(symbol)}
+      InstanceVariableFinder.new(symbol)
     end
 
     def method(symbol)
-      proc{|object|object.send(symbol)}
+      MethodFinder.new(symbol)
     end
     
     def rule(key)
-      proc{@other_rules[key]}
+      RuleReference.new(key, @other_rules)
     end
     
-    def expression(finder, curried_predicate_or_rule)
+    def expression(finder, constraint)
       finder = instance_variable(finder.to_sym) if finder.is_a?(String) && finder =~ /^@/
       finder = method(finder) if finder.is_a?(Symbol)
       
-      @expressions ||= []
-      @expressions << Expression.new(finder, curried_predicate_or_rule)
+      if constraint.is_a?(Predicated::Predicate)
+        constraint = TemplatedPredicateHolder.new(constraint)
+      elsif constraint.is_a?(Rule)
+        constraint = RuleHolder.new(constraint)
+      end
+      
+      @expressions << Expression.new(finder, constraint)
       self
     end
   end
-  
-  class Expression
-    def initialize(finder, curried_predicate_or_rule)
-      @finder = finder
-      @curried_predicate_or_rule = curried_predicate_or_rule
-    end
-    
-    def evaluate(object)
-      object_part = @finder.call(object)
-      if @curried_predicate_or_rule.is_a?(Proc)
-        @curried_predicate_or_rule = @curried_predicate_or_rule.call 
-      end
-      
-      if @curried_predicate_or_rule.is_a?(Rule)
-        @curried_predicate_or_rule.satisfied_by?(object_part)
-      else
-        predicate = @curried_predicate_or_rule.apply(object_part)
-        predicate.evaluate
-      end
-    end
-  end
-  
+
   class Expressions < Array
     def evaluate_all(object)
       find{|expression|expression.evaluate(object)==false}.nil?
     end
   end
+    
+  class Expression
+    def initialize(finder, constraint)
+      @finder = finder
+      @constraint = constraint
+    end
+    
+    def evaluate(object)
+      object_part = @finder.pluck_from(object)
+      @constraint.evaluate(object_part)
+    end
+  end
+
+  class RuleReference
+    def initialize(rule_key, other_rules)
+      @rule_key = rule_key
+      @other_rules = other_rules
+    end
+    
+    def resolve_rule
+      @other_rules[@rule_key]
+    end
+    
+    def evaluate(object)
+      resolve_rule.satisfied_by?(object)
+    end
+  end
+  
+  class RuleHolder
+    def initialize(rule)
+      @rule = rule
+    end
+    
+    def evaluate(object)
+      @rule.satisfied_by?(object)
+    end
+  end
+
+  class TemplatedPredicateHolder
+    def initialize(templated_predicate)
+      @templated_predicate = templated_predicate
+    end
+    
+    def resolve_predicate(object)
+      @templated_predicate.fill_in(object)
+    end
+    
+    def evaluate(object)
+      resolve_predicate(object).evaluate
+    end
+  end
+  
+  class InstanceVariableFinder
+    def initialize(instance_variable_symbol)
+      @instance_variable_symbol = instance_variable_symbol
+    end
+    
+    def pluck_from(object)
+      object.instance_variable_get(@instance_variable_symbol)
+    end
+  end
+  
+  class MethodFinder
+    def initialize(method_symbol)
+      @method_symbol = method_symbol
+    end
+    
+    def pluck_from(object)
+      object.send(@method_symbol)
+    end
+  end
+  
 end
+
+require "pinker/print_rule"
