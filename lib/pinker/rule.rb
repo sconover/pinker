@@ -3,10 +3,12 @@ require "predicated/simple_templated_predicate"
 require "predicated/evaluate"
 require "predicated/autogen_call"
 
+require "pinker/core"
+
 module Pinker
   
   class Rule
-    attr_reader :name_or_class
+    attr_reader :name_or_class, :expressions
     def initialize(name_or_class, options={}, &block)
       @name_or_class = name_or_class
       @other_rules = options[:other_rules]
@@ -33,6 +35,11 @@ module Pinker
                       !object.is_a?(@name_or_class)
       
       @expressions.evaluate_all(object)
+    end
+    
+    def ==(other)
+      @name_or_class == other.name_or_class &&
+      @expressions == other.expressions
     end
   end
     
@@ -62,7 +69,6 @@ module Pinker
       end
       
       @expressions << Expression.new(finder, constraint)
-      self
     end
   end
 
@@ -73,6 +79,8 @@ module Pinker
   end
     
   class Expression
+    include ValueEquality
+    
     def initialize(finder, constraint)
       @finder = finder
       @constraint = constraint
@@ -85,6 +93,8 @@ module Pinker
   end
 
   class RuleReference
+    attr_reader :rule_key
+    
     def initialize(rule_key, other_rules)
       @rule_key = rule_key
       @other_rules = other_rules
@@ -97,9 +107,15 @@ module Pinker
     def evaluate(object)
       resolve_rule.satisfied_by?(object)
     end
+    
+    def ==(other)
+      @rule_key == other.rule_key
+    end
   end
   
   class RuleHolder
+    include ValueEquality
+    
     def initialize(rule)
       @rule = rule
     end
@@ -110,6 +126,8 @@ module Pinker
   end
 
   class TemplatedPredicateHolder
+    include ValueEquality
+    
     def initialize(templated_predicate)
       @templated_predicate = templated_predicate
     end
@@ -124,6 +142,8 @@ module Pinker
   end
   
   class InstanceVariableFinder
+    include ValueEquality
+    
     def initialize(instance_variable_symbol)
       @instance_variable_symbol = instance_variable_symbol
     end
@@ -134,6 +154,8 @@ module Pinker
   end
   
   class MethodFinder
+    include ValueEquality
+    
     def initialize(method_symbol)
       @method_symbol = method_symbol
     end
