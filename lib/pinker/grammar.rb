@@ -5,6 +5,18 @@ module Pinker
   class Grammar
     include ValueEquality
     
+    # GRAMMAR_GRAMMAR = 
+    #   Grammar.new(Grammar) do
+    #     rule(Grammar) do
+    #       condition("@rules", rule(Rules))
+    #     end
+    #     
+    #     rule(Rules) do
+    #       condition(__object__, Not(Empty?), "A Grammar must have at least one Rule.")
+    #     end
+    #   end
+    
+    
     def initialize(name_or_class, &block)
       @name_or_class = name_or_class
       @rules = Rules.new

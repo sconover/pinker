@@ -81,7 +81,7 @@ module Pinker
       SelfFinder.new
     end
     
-    def condition(finder, constraint)
+    def condition(finder, constraint, custom_failure_message_template=nil)
       finder = instance_variable(finder.to_sym) if finder.is_a?(String) && finder =~ /^@/
       finder = method(finder) if finder.is_a?(Symbol)
       
@@ -91,7 +91,7 @@ module Pinker
         constraint = RuleHolder.new(constraint)
       end
       
-      condition = Condition.new(finder, constraint)
+      condition = Condition.new(finder, constraint, custom_failure_message_template)
       @conditions << condition
       condition
     end
@@ -114,14 +114,15 @@ module Pinker
   class Condition
     include ValueEquality
     
-    def initialize(finder, constraint)
+    def initialize(finder, constraint, custom_failure_message_template=nil)
       @finder = finder
       @constraint = constraint
+      @custom_failure_message_template = custom_failure_message_template
     end
     
     def problems_with(object)
       object_part = @finder.pluck_from(object)
-      @constraint.problems_with(object_part, @finder)
+      @constraint.problems_with(object_part, @finder, @custom_failure_message_template)
     end
 
     def evaluate(object)
@@ -141,7 +142,7 @@ module Pinker
       @other_rules[@rule_key]
     end
     
-    def problems_with(object, finder)
+    def problems_with(object, finder, custom_failure_message_template)
       resolve_rule.apply_to(object).problems
     end
     
@@ -157,7 +158,7 @@ module Pinker
       @rule = rule
     end
     
-    def problems_with(object, finder)
+    def problems_with(object, finder, custom_failure_message_template)
       @rule.apply_to(object).problems
     end
   end
@@ -173,13 +174,21 @@ module Pinker
       @templated_predicate.fill_in(object)
     end
     
-    def problems_with(object, finder)
-      expanded_predicate = resolve_predicate(object)
+    def problems_with(actual_object, finder, custom_failure_message_template)
+      expanded_predicate = resolve_predicate(actual_object)
       if expanded_predicate.evaluate
         []
       else
+        
+        custom_failure_message = 
+          if custom_failure_message_template
+            eval( '"' + custom_failure_message_template + '"' )
+          else
+            nil
+          end
+        
         templated_predicate = @templated_predicate #scoping, grr
-        Problems.new{problem(condition(finder, templated_predicate), object)}
+        Problems.new{problem(condition(finder, templated_predicate), actual_object, custom_failure_message)}
       end
     end
   end
@@ -218,42 +227,7 @@ module Pinker
     end
   end
   
-  class Problems < Array
-    def initialize(&block)
-      compose(&block) if block
-    end    
-    
-    def compose(&block)
-      problems = self
-      Module.new do
-        extend ProblemContext
-        @conditions = []
-        @problems = problems
-        instance_eval(&block)
-      end
-    end
-  end
-
-  module ProblemContext
-    include ConditionContext
-    
-    def problem(condition, actual_object)
-      problem = Problem.new(condition, actual_object)
-      @problems << problem
-      problem
-    end
-  end
-  
-  class Problem
-    include ValueEquality
-    
-    def initialize(condition, actual_object)
-      @condition = condition
-      @actual_object = actual_object
-    end    
-  end
-
-  
 end
 
+require "pinker/problem"
 require "pinker/print_rule"

@@ -170,4 +170,39 @@ regarding "a rule" do
     end
     
   end
+  
+  
+  regarding "a condition can have a custom message, and this message is communicated in the problem" do
+    
+    test "simple" do
+      rule = 
+        Rule.new(Color) do 
+          condition(instance_variable("@name".to_sym), Eq("red"), "Needs to be red, sorry.")
+        end
+      
+      assert{ rule.apply_to(Color.new("red")).satisfied? }
+      assert{ rule.apply_to(Color.new("blue")).problems == 
+                Problems.new do
+                  problem(condition("@name", Eq("red")), "blue", "Needs to be red, sorry.")
+                end
+            }
+    end
+    
+    test "substitution" do
+      rule = 
+        Rule.new(Color) do 
+          condition(instance_variable("@name".to_sym), Eq("red"), 'Needs to be red, but was #{actual_object}.')
+        end
+      
+      assert{ rule.apply_to(Color.new("red")).satisfied? }
+      assert{ rule.apply_to(Color.new("blue")).problems == 
+                Problems.new do
+                  problem(condition("@name", Eq("red")), "blue", "Needs to be red, but was blue.")
+                end
+            }
+    end
+
+    
+  end
+  
 end

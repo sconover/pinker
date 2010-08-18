@@ -55,4 +55,30 @@ regarding "a grammar is a set of rules" do
       deny  { @shirt_grammar.apply_to(Shirt.new("small", Color.new("green"))).well_formed? }
     end
   end
+  
+  xregarding "invalid grammars" do
+
+    test "must define at least one rule" do
+      shirt_grammar_with_no_rules =
+        Grammar.new(Shirt) do
+        end
+      
+      assert{ catch_raise(shirt_grammar_with_no_rules.apply_to(nil)).message.include?(
+                "A Grammar must have at least one Rule."
+             ) }
+    end
+    
+    test "there was a reference for an unknown rule" do
+      shirt_grammar_with_no_color_rule_defined =
+        Grammar.new(Shirt) do
+          rule(Shirt) do
+            condition("@size", Or(Eq("small"), Eq("large"))) #future: replace with In
+            condition("@color", rule(Color))
+          end
+        end
+        
+    end
+    
+    
+  end
 end

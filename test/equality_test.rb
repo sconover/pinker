@@ -22,6 +22,19 @@ regarding "prove value equality" do
     deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectZZ") }
   end
     
+  test "problem with custom message" do
+    conditionA = Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
+    conditionZZ = Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:ZZ,{}))
+  
+    assert{ Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectA") }
+    assert{ Problem.new(conditionA, "objectA", "Custom message") == Problem.new(conditionA, "objectA", "Custom message") }
+    
+    deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionZZ, "objectA") }
+    deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectZZ") }
+    
+    deny  { Problem.new(conditionA, "objectA", "One message") == Problem.new(conditionA, "objectA", "Another message") }
+  end
+    
   test "problems" do
     assert{ Problems.new{problem(condition("@color", Eq("red")), "objectA")} == 
               Problems.new{problem(condition("@color", Eq("red")), "objectA")} }
@@ -115,11 +128,16 @@ regarding "prove value equality" do
   test "condition" do
     assert { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
                Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) }
+    assert { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'Custom failure message template') ==
+               Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'Custom failure message template') }
 
     deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
                Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:A,{})) }
     deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
                Condition.new(MethodFinder.new(:a), RuleReference.new(:ZZ,{})) }
+    deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'One message') ==
+              Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'Another message') }
+
   end
   
 end
