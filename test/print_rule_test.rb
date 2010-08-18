@@ -13,6 +13,9 @@ regarding "rule printing" do
       assert{ Rule.new(Color) { expression("@name", Eq("red")) }.to_s == 
                 %{Rule(Color)[@name->Eq('red')]} }
 
+      assert{ Rule.new(Color) { expression(_object_, Eq("red")) }.to_s == 
+                %{Rule(Color)[_object_->Eq('red')]} }
+
       assert{ Rule.new(:red_color_rule) { expression("@name", Eq("red")) }.to_s == 
                 %{Rule(:red_color_rule)[@name->Eq('red')]} }
 

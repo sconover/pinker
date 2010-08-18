@@ -1,27 +1,33 @@
 module Pinker
   module PrintSupport
-    def inspect(indent="")
-      indent + to_s
+    overridable do
+      def inspect(indent="")
+        indent + to_s
+      end
     end
   end
   
   module ArrayPrintSupport
-    def inspect(indent="", prefix="")
-      str = indent + prefix + "[\n"
+    overridable do
+      def inspect(indent="", prefix="")
+        str = indent + prefix + "[\n"
       
-      each_with_index do |item, i|
-        str << item.inspect(indent + "  ")
-        str << "," unless i==length-1
-        str << "\n"
+        each_with_index do |item, i|
+          str << item.inspect(indent + "  ")
+          str << "," unless i==length-1
+          str << "\n"
+        end
+      
+        str << indent + "]"
+        str
       end
-      
-      str << indent + "]"
-      str
     end
     
-    def to_s
-      "[" + collect{|item|item.to_s}.join(",") + "]"
-    end  
+    overridable do
+      def to_s
+        "[" + collect{|item|item.to_s}.join(",") + "]"
+      end  
+    end
   end
   
   
@@ -95,4 +101,34 @@ module Pinker
     end
   end
   
+  class SelfFinder
+    include PrintSupport
+    
+    def to_s
+      "_object_"
+    end
+  end
+  
+  class Problems
+    include ArrayPrintSupport
+    
+    def inspect(indent="")
+      "Problems" + super.lstrip
+    end
+    
+    def to_s
+      "Problems" + super
+    end
+  end
+
+  class Problem
+    def inspect(indent="")
+      @expression.inspect(indent) + "\n" + 
+      indent + "  ==> " + @actual_object.inspect
+    end    
+    
+    def to_s
+      @expression.to_s + ":" + @actual_object.inspect
+    end
+  end
 end

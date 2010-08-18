@@ -30,6 +30,16 @@ regarding "prove value equality" do
               Problems.new{problem(expression("@ZZ", Eq("ZZ")), "ZZ")} }
   end
     
+  test "result of grammar application" do
+    p1 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
+    p2 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
+    pZZ = Problems.new{problem(expression("@ZZ", Eq("ZZ")), "ZZ")}
+
+    assert{ ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(p1) }
+    
+    deny  { ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(pZZ) }
+  end
+    
   test "rule" do
     assert{ Rule.new(:a){expression("@size", Eq("large"))} ==
               Rule.new(:a){expression("@size", Eq("large"))} }
@@ -41,6 +51,17 @@ regarding "prove value equality" do
     deny  { Rule.new(:a){expression("@size", Eq("large"))} ==
               Rule.new(:a){expression("@size", Eq("ZZZ"))} }
   end
+
+  test "result of rule application" do
+    p1 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
+    p2 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
+    pZZ = Problems.new{problem(expression("@ZZ", Eq("ZZ")), "ZZ")}
+
+    assert{ ResultOfRuleApplication.new(p1) == ResultOfRuleApplication.new(p1) }
+    
+    deny  { ResultOfRuleApplication.new(p1) == ResultOfRuleApplication.new(pZZ) }
+  end
+
 
   test "rule holder" do
     assert{ RuleHolder.new(Rule.new(:a){}) == RuleHolder.new(Rule.new(:a){}) }
@@ -69,6 +90,11 @@ regarding "prove value equality" do
   test "rule reference" do
     assert { RuleReference.new(:a, {}) == RuleReference.new(:a, {}) }
     deny   { RuleReference.new(:a, {}) == RuleReference.new(:ZZ, {}) }
+  end
+  
+  test "self finder" do
+    assert { SelfFinder.new == SelfFinder.new }
+    deny   { SelfFinder.new == RuleReference.new(:ZZ, {}) }
   end
   
   test "expressions" do

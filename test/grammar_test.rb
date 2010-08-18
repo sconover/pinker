@@ -46,14 +46,13 @@ regarding "a grammar is a set of rules" do
     end
     
     test "simple grammar" do
-    
-      assert{ @shirt_grammar.well_formed?(Shirt.new("small", Color.new("red"))) }
-      assert{ @shirt_grammar.well_formed?(Shirt.new("large", Color.new("red"))) }
-      assert{ @shirt_grammar.well_formed?(Shirt.new("large", Color.new("blue"))) }
-      assert{ @shirt_grammar.well_formed?(Shirt.new("small", Color.new("blue"))) }
-              
-      deny  { @shirt_grammar.well_formed?(Shirt.new("tiny", Color.new("blue"))) }
-      deny  { @shirt_grammar.well_formed?(Shirt.new("small", Color.new("green"))) }
+      assert{ @shirt_grammar.apply_to(Shirt.new("small", Color.new("red"))).well_formed? }
+      assert{ @shirt_grammar.apply_to(Shirt.new("large", Color.new("red"))).well_formed? }
+      assert{ @shirt_grammar.apply_to(Shirt.new("large", Color.new("blue"))).well_formed? }
+      assert{ @shirt_grammar.apply_to(Shirt.new("small", Color.new("blue"))).well_formed? }
+
+      deny  { @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("blue"))).well_formed? }
+      deny  { @shirt_grammar.apply_to(Shirt.new("small", Color.new("green"))).well_formed? }
     end
   end
 end

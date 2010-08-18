@@ -16,5 +16,21 @@ module Pinker
     include ArrayPrintSupport
   end
 
-  
+  class ResultOfGrammarApplication
+    def inspect(indent="")
+      if well_formed?
+        indent + "Result:Well-Formed"
+      else
+        indent + "Result:Not-Well-Formed:\n" + indent + "  " + @problems.inspect(indent + "  ")
+      end
+    end
+
+    def to_s
+      if well_formed?
+        "Result:Well-Formed"
+      else
+        "Result:Not-Well-Formed:#{@problems.to_s}"
+      end
+    end
+  end  
 end

@@ -21,15 +21,24 @@ module Pinker
       end
     end
     
+    #have to have at least one rule...
+    
     def apply_to(object)
+      ResultOfGrammarApplication.new(@rules.first.apply_to(object).problems)
+    end
+  end
+  
+  class ResultOfGrammarApplication
+    include ValueEquality
+    
+    attr_reader :problems
+    
+    def initialize(problems)
+      @problems = problems
     end
     
-    def well_formed?(object)
-      # return false if @name_or_class.is_a?(Class) && 
-      #                 !object.nil? && 
-      #                 !object.is_a?(@name_or_class)
-      
-      @rules.satisfies_all?(object)
+    def well_formed?
+      @problems.empty?
     end
   end
   
@@ -47,8 +56,10 @@ module Pinker
       find{|rule|rule.name_or_class==key}
     end
     
-    def satisfies_all?(object)
-      find{|rule|rule.satisfied_by?(object)==false}.nil?
+    def problems_with(object)
+      problems = Problems.new
+      problems.push(*collect{|rule|rule.apply_to(object).problems}.flatten)
+      problems
     end
   end
 
@@ -60,37 +71,6 @@ module Pinker
     end
   end
   
-  class Problems < Array
-    def initialize(&block)
-      problems = self
-      Module.new do
-        extend ProblemContext
-        @expressions = []
-        @problems = problems
-        instance_eval(&block)
-      end
-    end    
-  end
-
-  module ProblemContext
-    include ExpressionContext
-    
-    def problem(expression, actual_object)
-      problem = Problem.new(expression, actual_object)
-      @problems << problem
-      problem
-    end
-  end
-  
-  class Problem
-    include ValueEquality
-    
-    def initialize(expression, actual_object)
-      @expression = expression
-      @actual_object = actual_object
-    end    
-  end
-
 end
 
 require "pinker/print_grammar"

@@ -1,6 +1,6 @@
 require "predicated/predicate"
-require "predicated/simple_templated_predicate"
 require "predicated/evaluate"
+require "predicated/simple_templated_predicate"
 require "predicated/autogen_call"
 
 require "pinker/core"
@@ -29,17 +29,36 @@ module Pinker
       end
     end
     
-    def satisfied_by?(object)
-      return false if @name_or_class.is_a?(Class) && 
-                      !object.nil? && 
-                      !object.is_a?(@name_or_class)
+    def apply_to(object)
+      problems = Problems.new
+      unless object.nil? || object.is_a?(name_or_class)
+        problems.compose do
+          problem(expression(_object_, IsA?(name_or_class)), object)
+        end
+      end
       
-      @expressions.evaluate_all(object)
+      problems.push(*@expressions.problems_with(object))
+      
+      ResultOfRuleApplication.new(problems)
     end
     
     def ==(other)
       @name_or_class == other.name_or_class &&
       @expressions == other.expressions
+    end
+  end
+  
+  class ResultOfRuleApplication
+    include ValueEquality
+    
+    attr_reader :problems
+    
+    def initialize(problems)
+      @problems = problems
+    end
+    
+    def satisfied?
+      @problems.empty?
     end
   end
     
@@ -58,6 +77,10 @@ module Pinker
       RuleReference.new(key, @other_rules)
     end
     
+    def _object_
+      SelfFinder.new
+    end
+    
     def expression(finder, constraint)
       finder = instance_variable(finder.to_sym) if finder.is_a?(String) && finder =~ /^@/
       finder = method(finder) if finder.is_a?(Symbol)
@@ -68,13 +91,23 @@ module Pinker
         constraint = RuleHolder.new(constraint)
       end
       
-      @expressions << Expression.new(finder, constraint)
+      expression = Expression.new(finder, constraint)
+      @expressions << expression
+      expression
     end
   end
 
   class Expressions < Array
+    def problems_with(object)
+      problems = Problems.new
+      each do |expression|
+        problems.push(*expression.problems_with(object))
+      end
+      problems
+    end
+    
     def evaluate_all(object)
-      find{|expression|expression.evaluate(object)==false}.nil?
+      problems_with(object).empty?
     end
   end
     
@@ -86,9 +119,13 @@ module Pinker
       @constraint = constraint
     end
     
-    def evaluate(object)
+    def problems_with(object)
       object_part = @finder.pluck_from(object)
-      @constraint.evaluate(object_part)
+      @constraint.problems_with(object_part, @finder)
+    end
+
+    def evaluate(object)
+      problems_with(object).empty?
     end
   end
 
@@ -104,8 +141,8 @@ module Pinker
       @other_rules[@rule_key]
     end
     
-    def evaluate(object)
-      resolve_rule.satisfied_by?(object)
+    def problems_with(object, finder)
+      resolve_rule.apply_to(object).problems
     end
     
     def ==(other)
@@ -120,8 +157,8 @@ module Pinker
       @rule = rule
     end
     
-    def evaluate(object)
-      @rule.satisfied_by?(object)
+    def problems_with(object, finder)
+      @rule.apply_to(object).problems
     end
   end
 
@@ -136,8 +173,14 @@ module Pinker
       @templated_predicate.fill_in(object)
     end
     
-    def evaluate(object)
-      resolve_predicate(object).evaluate
+    def problems_with(object, finder)
+      expanded_predicate = resolve_predicate(object)
+      if expanded_predicate.evaluate
+        []
+      else
+        templated_predicate = @templated_predicate #scoping, grr
+        Problems.new{problem(expression(finder, templated_predicate), object)}
+      end
     end
   end
   
@@ -164,6 +207,52 @@ module Pinker
       object.send(@method_symbol)
     end
   end
+  
+  class SelfFinder
+    def pluck_from(object)
+      object
+    end
+    
+    def ==(other)
+      other.is_a?(SelfFinder)
+    end
+  end
+  
+  class Problems < Array
+    def initialize(&block)
+      compose(&block) if block
+    end    
+    
+    def compose(&block)
+      problems = self
+      Module.new do
+        extend ProblemContext
+        @expressions = []
+        @problems = problems
+        instance_eval(&block)
+      end
+    end
+  end
+
+  module ProblemContext
+    include ExpressionContext
+    
+    def problem(expression, actual_object)
+      problem = Problem.new(expression, actual_object)
+      @problems << problem
+      problem
+    end
+  end
+  
+  class Problem
+    include ValueEquality
+    
+    def initialize(expression, actual_object)
+      @expression = expression
+      @actual_object = actual_object
+    end    
+  end
+
   
 end
 

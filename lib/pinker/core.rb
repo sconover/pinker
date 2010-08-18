@@ -1,3 +1,11 @@
+#see http://yehudakatz.com/2009/01/18/other-ways-to-wrap-a-method/
+class Module
+  def overridable(&blk)
+    mod = Module.new(&blk)
+    include mod
+  end
+end
+
 module Pinker
   module ValueEquality
     def ==(other)

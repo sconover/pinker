@@ -15,6 +15,7 @@ include Pinker
 regarding "a rule" do
 
   class Color
+    include ValueEquality
     def initialize(name)
       @name = name
     end
@@ -23,6 +24,16 @@ regarding "a rule" do
       @name + "x"
     end
   end
+  
+  class Shirt
+    include ValueEquality
+    def initialize(size, color)
+      @size = size
+      @color = color
+    end
+  end
+    
+
 
   before do
     @red_rule = 
@@ -31,11 +42,11 @@ regarding "a rule" do
       end
   end
   
-  regarding "basics - build a rule and satisfied_by? it against an object" do
+  regarding "basics - build a rule and apply_to it against an object" do
 
-    test "basic satisfied_by?" do
-      assert{ @red_rule.satisfied_by?(Color.new("red")) }
-      deny  { @red_rule.satisfied_by?(Color.new("blue")) }
+    test "basic apply_to" do
+      assert{ @red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { @red_rule.apply_to(Color.new("blue")).satisfied? }
     end
 
     test "finder shorthand - instance variables" do
@@ -44,8 +55,8 @@ regarding "a rule" do
           expression("@name", Eq("blue"))
         end
 
-      assert{ blue_rule.satisfied_by?(Color.new("blue")) }
-      deny  { blue_rule.satisfied_by?(Color.new("red")) }
+      assert{ blue_rule.apply_to(Color.new("blue")).satisfied? }
+      deny  { blue_rule.apply_to(Color.new("red")).satisfied? }
     end
   
     test "method finder" do
@@ -54,8 +65,8 @@ regarding "a rule" do
           expression(method(:name_x), Eq("greenx"))
         end
 
-      assert{ green_rule.satisfied_by?(Color.new("green")) }
-      deny  { green_rule.satisfied_by?(Color.new("blue")) }
+      assert{ green_rule.apply_to(Color.new("green")).satisfied? }
+      deny  { green_rule.apply_to(Color.new("blue")).satisfied? }
     end
 
     test "finder shorthand - methods" do
@@ -64,11 +75,45 @@ regarding "a rule" do
           expression(:name_x, Eq("bluex"))
         end
 
-      assert{ blue_rule.satisfied_by?(Color.new("blue")) }
-      deny  { blue_rule.satisfied_by?(Color.new("red")) }
+      assert{ blue_rule.apply_to(Color.new("blue")).satisfied? }
+      deny  { blue_rule.apply_to(Color.new("red")).satisfied? }
     end
   end
   
+  regarding "apply_to is like apply_to but it gives more detail when things go wrong" do
+    
+    test "apply_to / result satisfied?" do
+      assert{ @red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { @red_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+    test "show problems" do
+      assert{ @red_rule.apply_to(Color.new("red")).problems.empty? }
+      assert{ 
+        @red_rule.apply_to(Color.new("blue")).problems == 
+          Problems.new{problem(expression("@name", Eq("red")), "blue")}
+      }
+    end
+
+    test "more complex rule with problems" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          expression("@size", Eq("large"))
+          expression("@color", Rule.new(Color){expression("@name", Eq("red"))})
+        end
+
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
+  
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
+                Problems.new{problem(expression("@name", Eq("red")), "blue")} }
+      assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
+                Problems.new{problem(expression("@size", Eq("large")), "small")} }
+      assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
+                Problems.new{problem(expression("@size", Eq("large")), "small")
+                             problem(expression("@name", Eq("red")), "blue")} }
+    end
+
+  end
   
   regarding "typing and nil" do
     
@@ -77,28 +122,21 @@ regarding "a rule" do
     
     test "failure if object type is not the same as the type known to the rule" do
       empty_rule = Rule.new(Color)
-      assert{ empty_rule.satisfied_by?(Color.new("zzz")) }
-      assert{ empty_rule.satisfied_by?(Shade.new("zzz")) }
-      deny  { empty_rule.satisfied_by?("zzz") }
+      assert{ empty_rule.apply_to(Color.new("zzz")).satisfied? }
+      assert{ empty_rule.apply_to(Shade.new("zzz")).satisfied? }
+      deny  { empty_rule.apply_to("zzz").satisfied? }
     end
     
     test "but a rule allowing nil should work" do
       weird_rule = Rule.new(Color) {expression("@name", Or(Nil?, Not(Nil?)))}
-      assert{ weird_rule.satisfied_by?(Color.new("zzz")) }
-      assert{ weird_rule.satisfied_by?(nil) }
-      deny  { weird_rule.satisfied_by?("zzz") }
+      assert{ weird_rule.apply_to(Color.new("zzz")).satisfied? }
+      assert{ weird_rule.apply_to(nil).satisfied? }
+      deny  { weird_rule.apply_to("zzz").satisfied? }
     end
     
   end
 
   regarding "reference to another rule" do
-    
-    class Shirt
-      def initialize(size, color)
-        @size = size
-        @color = color
-      end
-    end
     
     test "should activate that rule with the found object" do
       shirt_rule =
@@ -107,9 +145,9 @@ regarding "a rule" do
           expression("@color", Rule.new(Color){expression("@name", Eq("red"))})
         end
       
-      assert{ shirt_rule.satisfied_by?(Shirt.new("large", Color.new("red"))) }
-      deny  { shirt_rule.satisfied_by?(Shirt.new("large", Color.new("blue"))) }
-      deny  { shirt_rule.satisfied_by?(Shirt.new("small", Color.new("red"))) }
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).satisfied? }
+      deny  { shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).satisfied? }
+      deny  { shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).satisfied? }
     end
     
     #test error: hoped-for rule not there
@@ -126,9 +164,9 @@ regarding "a rule" do
           expression("@color", rule(Color))
         end
       
-      assert{ shirt_rule.satisfied_by?(Shirt.new("large", Color.new("red"))) }
-      deny  { shirt_rule.satisfied_by?(Shirt.new("large", Color.new("blue"))) }
-      deny  { shirt_rule.satisfied_by?(Shirt.new("small", Color.new("red"))) }
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).satisfied? }
+      deny  { shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).satisfied? }
+      deny  { shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).satisfied? }
     end
     
   end
