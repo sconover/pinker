@@ -3,19 +3,7 @@ require "pinker/rule"
 module Pinker
   
   class Grammar
-    include ValueEquality
-    
-    # GRAMMAR_GRAMMAR = 
-    #   Grammar.new(Grammar) do
-    #     rule(Grammar) do
-    #       condition("@rules", rule(Rules))
-    #     end
-    #     
-    #     rule(Rules) do
-    #       condition(__object__, Not(Empty?), "A Grammar must have at least one Rule.\n#{actual_object.inspect}")
-    #     end
-    #   end
-    # 
+    include ValueEquality    
     
     def initialize(name_or_class, &block)
       @name_or_class = name_or_class
@@ -36,17 +24,37 @@ module Pinker
     #have to have at least one rule...
     
     def apply_to(object)
-      # result = GRAMMAR_GRAMMAR.apply_to(self)
-      # unless result.well_formed?
-      #   raise InvalidGrammarError.new(result.problems.first)
-      # end
+      i_am_well_formed!      
+      apply_to_without_self_validation(object)
+    end
+    
+    private
+    def i_am_well_formed!
+      result = grammar_grammar.send(:apply_to_without_self_validation, self)
+      unless result.well_formed?
+        raise InvalidGrammarError.new(result.problems.first.message)
+      end
+    end
+    
+    def apply_to_without_self_validation(object)
       ResultOfGrammarApplication.new(@rules.first.apply_to(object).problems)
+    end
+    
+    def grammar_grammar
+      Grammar.new(Grammar) do
+        rule(Grammar) do
+          condition("@rules", rule(Rules))
+        end
+        
+        rule(Rules) do
+          condition(_object_, Not(Empty?), 'A Grammar must have at least one Rule.\n#{actual_object.inspect}')
+        end
+      end
     end
     
   end
   
-  class InvalidGrammarError < StandardError
-  end
+  class InvalidGrammarError < StandardError; end
   
   class ResultOfGrammarApplication
     include ValueEquality

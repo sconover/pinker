@@ -56,7 +56,7 @@ regarding "a grammar is a set of rules" do
     end
   end
   
-  xregarding "invalid grammars" do
+  regarding "invalid grammars" do
 
     #need to be able to pass information about the stack...
       #the object traversal
@@ -69,7 +69,7 @@ regarding "a grammar is a set of rules" do
         end
       
       assert{ 
-        catch_raise(shirt_grammar_with_no_rules.apply_to(nil)).message == 
+        catch_raise{shirt_grammar_with_no_rules.apply_to(nil)}.message == 
           "A Grammar must have at least one Rule.\n#{shirt_grammar_with_no_rules.inspect}"
       }
     end
