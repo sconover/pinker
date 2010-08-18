@@ -38,7 +38,7 @@ regarding "a rule" do
   before do
     @red_rule = 
       Rule.new(Color) do 
-        expression(instance_variable("@name".to_sym), Eq("red"))
+        condition(instance_variable("@name".to_sym), Eq("red"))
       end
   end
   
@@ -52,7 +52,7 @@ regarding "a rule" do
     test "finder shorthand - instance variables" do
       blue_rule = 
         Rule.new(Color) do 
-          expression("@name", Eq("blue"))
+          condition("@name", Eq("blue"))
         end
 
       assert{ blue_rule.apply_to(Color.new("blue")).satisfied? }
@@ -62,7 +62,7 @@ regarding "a rule" do
     test "method finder" do
       green_rule = 
         Rule.new(Color) do 
-          expression(method(:name_x), Eq("greenx"))
+          condition(method(:name_x), Eq("greenx"))
         end
 
       assert{ green_rule.apply_to(Color.new("green")).satisfied? }
@@ -72,7 +72,7 @@ regarding "a rule" do
     test "finder shorthand - methods" do
       blue_rule = 
         Rule.new(Color) do 
-          expression(:name_x, Eq("bluex"))
+          condition(:name_x, Eq("bluex"))
         end
 
       assert{ blue_rule.apply_to(Color.new("blue")).satisfied? }
@@ -91,26 +91,26 @@ regarding "a rule" do
       assert{ @red_rule.apply_to(Color.new("red")).problems.empty? }
       assert{ 
         @red_rule.apply_to(Color.new("blue")).problems == 
-          Problems.new{problem(expression("@name", Eq("red")), "blue")}
+          Problems.new{problem(condition("@name", Eq("red")), "blue")}
       }
     end
 
     test "more complex rule with problems" do
       shirt_rule =
         Rule.new(Shirt) do
-          expression("@size", Eq("large"))
-          expression("@color", Rule.new(Color){expression("@name", Eq("red"))})
+          condition("@size", Eq("large"))
+          condition("@color", Rule.new(Color){condition("@name", Eq("red"))})
         end
 
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
   
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
-                Problems.new{problem(expression("@name", Eq("red")), "blue")} }
+                Problems.new{problem(condition("@name", Eq("red")), "blue")} }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
-                Problems.new{problem(expression("@size", Eq("large")), "small")} }
+                Problems.new{problem(condition("@size", Eq("large")), "small")} }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
-                Problems.new{problem(expression("@size", Eq("large")), "small")
-                             problem(expression("@name", Eq("red")), "blue")} }
+                Problems.new{problem(condition("@size", Eq("large")), "small")
+                             problem(condition("@name", Eq("red")), "blue")} }
     end
 
   end
@@ -128,7 +128,7 @@ regarding "a rule" do
     end
     
     test "but a rule allowing nil should work" do
-      weird_rule = Rule.new(Color) {expression("@name", Or(Nil?, Not(Nil?)))}
+      weird_rule = Rule.new(Color) {condition("@name", Or(Nil?, Not(Nil?)))}
       assert{ weird_rule.apply_to(Color.new("zzz")).satisfied? }
       assert{ weird_rule.apply_to(nil).satisfied? }
       deny  { weird_rule.apply_to("zzz").satisfied? }
@@ -141,8 +141,8 @@ regarding "a rule" do
     test "should activate that rule with the found object" do
       shirt_rule =
         Rule.new(Shirt) do
-          expression("@size", Eq("large"))
-          expression("@color", Rule.new(Color){expression("@name", Eq("red"))})
+          condition("@size", Eq("large"))
+          condition("@color", Rule.new(Color){condition("@name", Eq("red"))})
         end
       
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).satisfied? }
@@ -155,13 +155,13 @@ regarding "a rule" do
     
     test "find the other rule at runtime" do
       other_rules = {
-        Color => Rule.new(Color){expression("@name", Eq("red"))}
+        Color => Rule.new(Color){condition("@name", Eq("red"))}
       }
       
       shirt_rule =
         Rule.new(Shirt, :other_rules => other_rules) do
-          expression("@size", Eq("large"))
-          expression("@color", rule(Color))
+          condition("@size", Eq("large"))
+          condition("@color", rule(Color))
         end
       
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).satisfied? }

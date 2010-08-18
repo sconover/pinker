@@ -33,21 +33,21 @@ module Pinker
   
   class Rule
     def inspect(indent="")
-      str = @expressions.inspect(indent, "Rule(#{@name_or_class.inspect})")
+      str = @conditions.inspect(indent, "Rule(#{@name_or_class.inspect})")
       str << "\n" if indent.empty?
       str
     end
     
     def to_s
-      "Rule(#{@name_or_class.inspect})#{@expressions.to_s}"
+      "Rule(#{@name_or_class.inspect})#{@conditions.to_s}"
     end
   end
   
-  class Expressions
+  class Conditions
     include ArrayPrintSupport
   end
     
-  class Expression
+  class Condition
     def inspect(indent="")
       @finder.inspect(indent) + "->" + @constraint.inspect(indent).lstrip
     end
@@ -123,12 +123,12 @@ module Pinker
 
   class Problem
     def inspect(indent="")
-      @expression.inspect(indent) + "\n" + 
+      @condition.inspect(indent) + "\n" + 
       indent + "  ==> " + @actual_object.inspect
     end    
     
     def to_s
-      @expression.to_s + ":" + @actual_object.inspect
+      @condition.to_s + ":" + @actual_object.inspect
     end
   end
 end

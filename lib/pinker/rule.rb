@@ -8,23 +8,23 @@ require "pinker/core"
 module Pinker
   
   class Rule
-    attr_reader :name_or_class, :expressions
+    attr_reader :name_or_class, :conditions
     def initialize(name_or_class, options={}, &block)
       @name_or_class = name_or_class
       @other_rules = options[:other_rules]
       
-      @expressions = Expressions.new
+      @conditions = Conditions.new
       
       add(&block) if block
     end
     
     def add(&block)
       other_rules = @other_rules
-      expressions = @expressions
+      conditions = @conditions
       Module.new do
-        extend ExpressionContext
+        extend ConditionContext
         @other_rules = other_rules
-        @expressions = expressions
+        @conditions = conditions
         instance_eval(&block)
       end
     end
@@ -33,18 +33,18 @@ module Pinker
       problems = Problems.new
       unless object.nil? || object.is_a?(name_or_class)
         problems.compose do
-          problem(expression(_object_, IsA?(name_or_class)), object)
+          problem(condition(_object_, IsA?(name_or_class)), object)
         end
       end
       
-      problems.push(*@expressions.problems_with(object))
+      problems.push(*@conditions.problems_with(object))
       
       ResultOfRuleApplication.new(problems)
     end
     
     def ==(other)
       @name_or_class == other.name_or_class &&
-      @expressions == other.expressions
+      @conditions == other.conditions
     end
   end
   
@@ -62,7 +62,7 @@ module Pinker
     end
   end
     
-  module ExpressionContext
+  module ConditionContext
     include Predicated::SimpleTemplatedShorthand
 
     def instance_variable(symbol)
@@ -81,7 +81,7 @@ module Pinker
       SelfFinder.new
     end
     
-    def expression(finder, constraint)
+    def condition(finder, constraint)
       finder = instance_variable(finder.to_sym) if finder.is_a?(String) && finder =~ /^@/
       finder = method(finder) if finder.is_a?(Symbol)
       
@@ -91,17 +91,17 @@ module Pinker
         constraint = RuleHolder.new(constraint)
       end
       
-      expression = Expression.new(finder, constraint)
-      @expressions << expression
-      expression
+      condition = Condition.new(finder, constraint)
+      @conditions << condition
+      condition
     end
   end
 
-  class Expressions < Array
+  class Conditions < Array
     def problems_with(object)
       problems = Problems.new
-      each do |expression|
-        problems.push(*expression.problems_with(object))
+      each do |condition|
+        problems.push(*condition.problems_with(object))
       end
       problems
     end
@@ -111,7 +111,7 @@ module Pinker
     end
   end
     
-  class Expression
+  class Condition
     include ValueEquality
     
     def initialize(finder, constraint)
@@ -179,7 +179,7 @@ module Pinker
         []
       else
         templated_predicate = @templated_predicate #scoping, grr
-        Problems.new{problem(expression(finder, templated_predicate), object)}
+        Problems.new{problem(condition(finder, templated_predicate), object)}
       end
     end
   end
@@ -227,7 +227,7 @@ module Pinker
       problems = self
       Module.new do
         extend ProblemContext
-        @expressions = []
+        @conditions = []
         @problems = problems
         instance_eval(&block)
       end
@@ -235,10 +235,10 @@ module Pinker
   end
 
   module ProblemContext
-    include ExpressionContext
+    include ConditionContext
     
-    def problem(expression, actual_object)
-      problem = Problem.new(expression, actual_object)
+    def problem(condition, actual_object)
+      problem = Problem.new(condition, actual_object)
       @problems << problem
       problem
     end
@@ -247,8 +247,8 @@ module Pinker
   class Problem
     include ValueEquality
     
-    def initialize(expression, actual_object)
-      @expression = expression
+    def initialize(condition, actual_object)
+      @condition = condition
       @actual_object = actual_object
     end    
   end

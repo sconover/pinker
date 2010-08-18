@@ -26,12 +26,12 @@ regarding "a grammar is a set of rules" do
       @shirt_grammar =
         Grammar.new(Shirt) do
           rule(Shirt) do
-            expression("@size", Or(Eq("small"), Eq("large"))) #future: replace with In
-            expression("@color", rule(Color))
+            condition("@size", Or(Eq("small"), Eq("large"))) #future: replace with In
+            condition("@color", rule(Color))
           end
       
           rule(Color) do
-            expression("@name", Or(Eq("red"), Eq("blue"))) #future: replace with In
+            condition("@name", Or(Eq("red"), Eq("blue"))) #future: replace with In
           end
         end    
     end
@@ -41,7 +41,7 @@ regarding "a grammar is a set of rules" do
       deny  { result.well_formed? }
       assert{ result.problems == 
                 Problems.new do
-                  problem(expression("@size", Or(Eq("small"), Eq("large"))), "tiny")
+                  problem(condition("@size", Or(Eq("small"), Eq("large"))), "tiny")
                 end }
     end
     

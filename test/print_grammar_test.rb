@@ -10,7 +10,7 @@ regarding "grammar printing" do
   regarding "a grammar looks nice with you to_s it" do
       
     test "simple" do
-      assert{ Grammar.new(:my_grammar){rule(Color){expression("@name", Eq("red"))}}.to_s == 
+      assert{ Grammar.new(:my_grammar){rule(Color){condition("@name", Eq("red"))}}.to_s == 
                 %{Grammar(:my_grammar)[Rule(Color)[@name->Eq('red')]]} }
     end
     
@@ -26,10 +26,10 @@ regarding "grammar printing" do
       assert {
         Grammar.new(:my_grammar) do
           rule(Shirt) do 
-            expression("@color", rule(:red_color_rule))
+            condition("@color", rule(:red_color_rule))
           end
           rule(:red_color_rule) do 
-            expression("@name", Eq("red"))
+            condition("@name", Eq("red"))
           end
         end.inspect ==
 %{Grammar(:my_grammar)[
@@ -54,8 +54,8 @@ regarding "grammar result printing" do
 
     it "fails" do
       assert{ ResultOfGrammarApplication.new(Problems.new{ 
-                problem(expression("@name", Eq("red")), "blue") 
-                problem(expression("@weight", Eq(9)), 8) 
+                problem(condition("@name", Eq("red")), "blue") 
+                problem(condition("@weight", Eq(9)), 8) 
               }).to_s == 
               %{Result:Not-Well-Formed:Problems[@name->Eq('red'):"blue",@weight->Eq(9):8]}
       }
@@ -69,8 +69,8 @@ regarding "grammar result printing" do
     
     test "fails" do
       assert{ ResultOfGrammarApplication.new(Problems.new{ 
-                problem(expression("@name", Eq("red")), "blue") 
-                problem(expression("@weight", Eq(9)), 8) 
+                problem(condition("@name", Eq("red")), "blue") 
+                problem(condition("@weight", Eq(9)), 8) 
               }).inspect == 
 %{Result:Not-Well-Formed:
   Problems[

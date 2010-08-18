@@ -13,27 +13,27 @@ regarding "prove value equality" do
   end
     
   test "problem" do
-    expressionA = Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
-    expressionZZ = Expression.new(MethodFinder.new(:ZZ), RuleReference.new(:ZZ,{}))
+    conditionA = Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
+    conditionZZ = Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:ZZ,{}))
   
-    assert{ Problem.new(expressionA, "objectA") == Problem.new(expressionA, "objectA") }
+    assert{ Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectA") }
     
-    deny  { Problem.new(expressionA, "objectA") == Problem.new(expressionZZ, "objectA") }
-    deny  { Problem.new(expressionA, "objectA") == Problem.new(expressionA, "objectZZ") }
+    deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionZZ, "objectA") }
+    deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectZZ") }
   end
     
   test "problems" do
-    assert{ Problems.new{problem(expression("@color", Eq("red")), "objectA")} == 
-              Problems.new{problem(expression("@color", Eq("red")), "objectA")} }
+    assert{ Problems.new{problem(condition("@color", Eq("red")), "objectA")} == 
+              Problems.new{problem(condition("@color", Eq("red")), "objectA")} }
     
-    deny  { Problems.new{problem(expression("@color", Eq("red")), "objectA")} == 
-              Problems.new{problem(expression("@ZZ", Eq("ZZ")), "ZZ")} }
+    deny  { Problems.new{problem(condition("@color", Eq("red")), "objectA")} == 
+              Problems.new{problem(condition("@ZZ", Eq("ZZ")), "ZZ")} }
   end
     
   test "result of grammar application" do
-    p1 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
-    p2 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
-    pZZ = Problems.new{problem(expression("@ZZ", Eq("ZZ")), "ZZ")}
+    p1 = Problems.new{problem(condition("@color", Eq("red")), "objectA")}
+    p2 = Problems.new{problem(condition("@color", Eq("red")), "objectA")}
+    pZZ = Problems.new{problem(condition("@ZZ", Eq("ZZ")), "ZZ")}
 
     assert{ ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(p1) }
     
@@ -41,21 +41,21 @@ regarding "prove value equality" do
   end
     
   test "rule" do
-    assert{ Rule.new(:a){expression("@size", Eq("large"))} ==
-              Rule.new(:a){expression("@size", Eq("large"))} }
+    assert{ Rule.new(:a){condition("@size", Eq("large"))} ==
+              Rule.new(:a){condition("@size", Eq("large"))} }
 
-    deny  { Rule.new(:a){expression("@size", Eq("large"))} ==
-              Rule.new(:ZZ){expression("@size", Eq("large"))} }
-    deny  { Rule.new(:a){expression("@size", Eq("large"))} ==
-              Rule.new(:a){expression("@ZZZ", Eq("large"))} }
-    deny  { Rule.new(:a){expression("@size", Eq("large"))} ==
-              Rule.new(:a){expression("@size", Eq("ZZZ"))} }
+    deny  { Rule.new(:a){condition("@size", Eq("large"))} ==
+              Rule.new(:ZZ){condition("@size", Eq("large"))} }
+    deny  { Rule.new(:a){condition("@size", Eq("large"))} ==
+              Rule.new(:a){condition("@ZZZ", Eq("large"))} }
+    deny  { Rule.new(:a){condition("@size", Eq("large"))} ==
+              Rule.new(:a){condition("@size", Eq("ZZZ"))} }
   end
 
   test "result of rule application" do
-    p1 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
-    p2 = Problems.new{problem(expression("@color", Eq("red")), "objectA")}
-    pZZ = Problems.new{problem(expression("@ZZ", Eq("ZZ")), "ZZ")}
+    p1 = Problems.new{problem(condition("@color", Eq("red")), "objectA")}
+    p2 = Problems.new{problem(condition("@color", Eq("red")), "objectA")}
+    pZZ = Problems.new{problem(condition("@ZZ", Eq("ZZ")), "ZZ")}
 
     assert{ ResultOfRuleApplication.new(p1) == ResultOfRuleApplication.new(p1) }
     
@@ -97,29 +97,29 @@ regarding "prove value equality" do
     deny   { SelfFinder.new == RuleReference.new(:ZZ, {}) }
   end
   
-  test "expressions" do
-    a1 = Expressions.new
-    a1 << Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
+  test "conditions" do
+    a1 = Conditions.new
+    a1 << Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
     
-    a2 = Expressions.new
-    a2 << Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
+    a2 = Conditions.new
+    a2 << Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}))
     
-    b = Expressions.new
-    b << Expression.new(MethodFinder.new(:ZZ), RuleReference.new(:ZZ,{}))
+    b = Conditions.new
+    b << Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:ZZ,{}))
     
     assert { a1 == a2 }
 
     deny   { a1 == b }
   end
   
-  test "expression" do
-    assert { Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
-               Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{})) }
+  test "condition" do
+    assert { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
+               Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) }
 
-    deny   { Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
-               Expression.new(MethodFinder.new(:ZZ), RuleReference.new(:A,{})) }
-    deny   { Expression.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
-               Expression.new(MethodFinder.new(:a), RuleReference.new(:ZZ,{})) }
+    deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
+               Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:A,{})) }
+    deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
+               Condition.new(MethodFinder.new(:a), RuleReference.new(:ZZ,{})) }
   end
   
 end
