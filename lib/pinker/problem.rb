@@ -1,3 +1,5 @@
+require "pinker/condition"
+
 module Pinker
   class Problems < Array
     def initialize(&block)
@@ -34,10 +36,15 @@ module Pinker
       @custom_message_template = custom_message_template
     end
     
-    def fill_in_predicate(predicate)
-      Condition.new(finder, constraint, custom_failure_message_template=nil)
-      Problems.new{problem(condition(finder, templated_predicate), object)}
-      @condition = condition
+    def message
+      if @custom_message_template
+        actual_object = @actual_object
+        eval( '"' + @custom_message_template + '"' )
+      else
+        inspect
+      end
     end
   end
 end
+
+require "pinker/print_problem"

@@ -12,10 +12,10 @@ module Pinker
     #     end
     #     
     #     rule(Rules) do
-    #       condition(__object__, Not(Empty?), "A Grammar must have at least one Rule.")
+    #       condition(__object__, Not(Empty?), "A Grammar must have at least one Rule.\n#{actual_object.inspect}")
     #     end
     #   end
-    
+    # 
     
     def initialize(name_or_class, &block)
       @name_or_class = name_or_class
@@ -36,8 +36,16 @@ module Pinker
     #have to have at least one rule...
     
     def apply_to(object)
+      # result = GRAMMAR_GRAMMAR.apply_to(self)
+      # unless result.well_formed?
+      #   raise InvalidGrammarError.new(result.problems.first)
+      # end
       ResultOfGrammarApplication.new(@rules.first.apply_to(object).problems)
     end
+    
+  end
+  
+  class InvalidGrammarError < StandardError
   end
   
   class ResultOfGrammarApplication

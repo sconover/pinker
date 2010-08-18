@@ -58,14 +58,20 @@ regarding "a grammar is a set of rules" do
   
   xregarding "invalid grammars" do
 
+    #need to be able to pass information about the stack...
+      #the object traversal
+      #the rule/condition path
+      #a Path?
+
     test "must define at least one rule" do
       shirt_grammar_with_no_rules =
         Grammar.new(Shirt) do
         end
       
-      assert{ catch_raise(shirt_grammar_with_no_rules.apply_to(nil)).message.include?(
-                "A Grammar must have at least one Rule."
-             ) }
+      assert{ 
+        catch_raise(shirt_grammar_with_no_rules.apply_to(nil)).message == 
+          "A Grammar must have at least one Rule.\n#{shirt_grammar_with_no_rules.inspect}"
+      }
     end
     
     test "there was a reference for an unknown rule" do
@@ -76,7 +82,6 @@ regarding "a grammar is a set of rules" do
             condition("@color", rule(Color))
           end
         end
-        
     end
     
     

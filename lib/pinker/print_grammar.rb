@@ -1,3 +1,5 @@
+require "pinker/print_rule"
+
 module Pinker
 
   class Grammar
