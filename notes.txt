@@ -72,7 +72,8 @@ rule(Button) do
   end
 
   declare do
-    holes.include?(@holes) || fail("Invalid number of holes", :expected => holes, :actual => @holes)
+    expected_holes = [2,4]
+    expected_holes.include?(@holes) || fail("Invalid number of holes", :expected => expected_holes, :actual => @holes)
   end
 
   declare("Invalid number of holes", :expected => proc{holes}, :actual => proc{@holes}){holes.include?(@holes)}
