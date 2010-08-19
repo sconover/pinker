@@ -19,13 +19,14 @@ module Pinker
         @rules = rules
         instance_eval(&block)
       end
+      self
     end
     
     #have to have at least one rule...
     
-    def apply_to(object)
+    def apply_to(object, path=[self])
       i_am_well_formed!      
-      apply_to_without_self_validation(object)
+      apply_to_without_self_validation(object, path)
     end
     
     private
@@ -36,8 +37,8 @@ module Pinker
       end
     end
     
-    def apply_to_without_self_validation(object)
-      ResultOfGrammarApplication.new(@rules.first.apply_to(object).problems)
+    def apply_to_without_self_validation(object, path=[self])
+      ResultOfGrammarApplication.new(@rules.first.apply_to(object, path).problems)
     end
     
     def grammar_grammar
@@ -47,7 +48,8 @@ module Pinker
         end
         
         rule(Rules) do
-          condition(_object_, Not(Empty?), 'A Grammar must have at least one Rule.\n#{actual_object.inspect}')
+          condition(_object_, Not(Empty?), 
+                    :custom_message_template => 'A Grammar must have at least one Rule.\n#{path.first.inspect}')
         end
       end
     end

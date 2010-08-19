@@ -27,12 +27,14 @@ regarding "prove value equality" do
     conditionZZ = Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:ZZ,{}))
   
     assert{ Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectA") }
-    assert{ Problem.new(conditionA, "objectA", "Custom message") == Problem.new(conditionA, "objectA", "Custom message") }
+    assert{ Problem.new(conditionA, "objectA", :custom_message_template => "Custom message") == 
+            Problem.new(conditionA, "objectA", :custom_message_template => "Custom message") }
     
     deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionZZ, "objectA") }
     deny  { Problem.new(conditionA, "objectA") == Problem.new(conditionA, "objectZZ") }
     
-    deny  { Problem.new(conditionA, "objectA", "One message") == Problem.new(conditionA, "objectA", "Another message") }
+    deny  { Problem.new(conditionA, "objectA", :custom_message_template => "One message") == 
+            Problem.new(conditionA, "objectA", :custom_message_template => "Another message") }
   end
     
   test "problems" do
@@ -128,15 +130,19 @@ regarding "prove value equality" do
   test "condition" do
     assert { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
                Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) }
-    assert { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'Custom failure message template') ==
-               Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'Custom failure message template') }
+    assert { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 
+                           :custom_message_template => 'Custom failure message template') ==
+               Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 
+                            :custom_message_template => 'Custom failure message template') }
 
     deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
                Condition.new(MethodFinder.new(:ZZ), RuleReference.new(:A,{})) }
     deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{})) ==
                Condition.new(MethodFinder.new(:a), RuleReference.new(:ZZ,{})) }
-    deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'One message') ==
-              Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 'Another message') }
+    deny   { Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 
+                           :custom_message_template => 'One message') ==
+              Condition.new(MethodFinder.new(:a), RuleReference.new(:A,{}), 
+                            :custom_message_template => 'Another message') }
 
   end
   

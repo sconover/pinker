@@ -21,7 +21,7 @@ module Pinker
       SelfFinder.new
     end
     
-    def condition(finder, constraint, custom_failure_message_template=nil)
+    def condition(finder, constraint, options={})
       finder = instance_variable(finder.to_sym) if finder.is_a?(String) && finder =~ /^@/
       finder = method(finder) if finder.is_a?(Symbol)
       
@@ -31,17 +31,17 @@ module Pinker
         constraint = RuleHolder.new(constraint)
       end
       
-      condition = Condition.new(finder, constraint, custom_failure_message_template)
+      condition = Condition.new(finder, constraint, options)
       @conditions << condition
       condition
     end
   end
 
   class Conditions < Array
-    def problems_with(object)
+    def problems_with(object, path)
       problems = Problems.new
       each do |condition|
-        problems.push(*condition.problems_with(object))
+        problems.push(*condition.problems_with(object, path))
       end
       problems
     end
@@ -54,19 +54,19 @@ module Pinker
   class Condition
     include ValueEquality
     
-    def initialize(finder, constraint, custom_failure_message_template=nil)
+    def initialize(finder, constraint, options={})
       @finder = finder
       @constraint = constraint
-      @custom_failure_message_template = custom_failure_message_template
+      @options = options
     end
     
-    def problems_with(object)
+    def problems_with(object, path)
       object_part = @finder.pluck_from(object)
-      @constraint.problems_with(object_part, @finder, @custom_failure_message_template)
+      @constraint.problems_with(object_part, @finder, @options.merge(:path => path))
     end
 
-    def evaluate(object)
-      problems_with(object).empty?
+    def evaluate(object, path)
+      problems_with(object, path).empty?
     end
   end
   
@@ -115,13 +115,13 @@ module Pinker
       @templated_predicate.fill_in(object)
     end
     
-    def problems_with(actual_object, finder, custom_failure_message_template)
+    def problems_with(actual_object, finder, options)
       expanded_predicate = resolve_predicate(actual_object)
       if expanded_predicate.evaluate
         []
       else
         templated_predicate = @templated_predicate #scoping, grr
-        Problems.new{problem(condition(finder, templated_predicate), actual_object, custom_failure_message_template)}
+        Problems.new{problem(condition(finder, templated_predicate), actual_object, options)}
       end
     end
   end

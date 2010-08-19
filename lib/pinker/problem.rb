@@ -20,8 +20,8 @@ module Pinker
   module ProblemContext
     include ConditionContext
   
-    def problem(condition, actual_object, custom_failure_message=nil)
-      problem = Problem.new(condition, actual_object, custom_failure_message)
+    def problem(condition, actual_object, options={})
+      problem = Problem.new(condition, actual_object, options)
       @problems << problem
       problem
     end
@@ -30,16 +30,17 @@ module Pinker
   class Problem
     include ValueEquality
   
-    def initialize(condition, actual_object, custom_message_template=nil)
+    def initialize(condition, actual_object, options={})
       @condition = condition
       @actual_object = actual_object
-      @custom_message_template = custom_message_template
+      @options = options
     end
     
     def message
-      if @custom_message_template
+      if @options[:custom_message_template]
         actual_object = @actual_object
-        eval( '"' + @custom_message_template + '"' )
+        path = @options[:path]
+        eval( '"' + @options[:custom_message_template] + '"' )
       else
         inspect
       end

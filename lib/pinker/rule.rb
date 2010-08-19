@@ -26,7 +26,7 @@ module Pinker
       end
     end
     
-    def apply_to(object)
+    def apply_to(object, path=[self])
       problems = Problems.new
       unless object.nil? || object.is_a?(name_or_class)
         problems.compose do
@@ -34,7 +34,7 @@ module Pinker
         end
       end
       
-      problems.push(*@conditions.problems_with(object))
+      problems.push(*@conditions.problems_with(object, path))
       
       ResultOfRuleApplication.new(problems)
     end
@@ -71,7 +71,7 @@ module Pinker
       @other_rules[@rule_key]
     end
     
-    def problems_with(object, finder, custom_failure_message_template)
+    def problems_with(object, finder, options)
       resolve_rule.apply_to(object).problems
     end
     
@@ -87,7 +87,7 @@ module Pinker
       @rule = rule
     end
     
-    def problems_with(object, finder, custom_failure_message_template)
+    def problems_with(object, finder, options)
       @rule.apply_to(object).problems
     end
   end

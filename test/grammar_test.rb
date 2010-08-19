@@ -41,7 +41,8 @@ regarding "a grammar is a set of rules" do
       deny  { result.well_formed? }
       assert{ result.problems == 
                 Problems.new do
-                  problem(condition("@size", Or(Eq("small"), Eq("large"))), "tiny")
+                  problem(condition("@size", Or(Eq("small"), Eq("large"))), "tiny", 
+                          :path => [@shirt_grammar])
                 end }
     end
     
