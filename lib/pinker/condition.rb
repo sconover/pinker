@@ -41,7 +41,7 @@ module Pinker
     def problems_with(object, path)
       problems = Problems.new
       each do |condition|
-        problems.push(*condition.problems_with(object, path))
+        problems.push(*condition.problems_with(object, path.dup))
       end
       problems
     end
@@ -62,7 +62,8 @@ module Pinker
     
     def problems_with(object, path)
       object_part = @finder.pluck_from(object)
-      @constraint.problems_with(object_part, @finder, @options.merge(:path => path))
+      path.push(self)
+      @constraint.problems_with(object_part, @finder, @options.merge(:path => path.dup))
     end
 
     def evaluate(object, path)

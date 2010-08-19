@@ -177,13 +177,15 @@ regarding "a rule" do
     test "simple" do
       rule = 
         Rule.new(Color) do 
-          condition(instance_variable("@name".to_sym), Eq("red"), "Needs to be red, sorry.")
+          condition(instance_variable("@name".to_sym), Eq("red"), 
+                    :custom_message_template => "Needs to be red, sorry.")
         end
       
       assert{ rule.apply_to(Color.new("red")).satisfied? }
       assert{ rule.apply_to(Color.new("blue")).problems == 
                 Problems.new do
-                  problem(condition("@name", Eq("red")), "blue", "Needs to be red, sorry.")
+                  problem(condition("@name", Eq("red")), "blue", 
+                                    :custom_message_template => "Needs to be red, sorry.")
                 end
             }
     end

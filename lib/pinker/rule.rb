@@ -26,7 +26,7 @@ module Pinker
       end
     end
     
-    def apply_to(object, path=[self])
+    def apply_to(object, path=[])
       problems = Problems.new
       unless object.nil? || object.is_a?(name_or_class)
         problems.compose do
@@ -34,7 +34,8 @@ module Pinker
         end
       end
       
-      problems.push(*@conditions.problems_with(object, path))
+      path.push(self)
+      problems.push(*@conditions.problems_with(object, path.dup))
       
       ResultOfRuleApplication.new(problems)
     end
@@ -72,7 +73,7 @@ module Pinker
     end
     
     def problems_with(object, finder, options)
-      resolve_rule.apply_to(object).problems
+      resolve_rule.apply_to(object, options[:path].dup).problems
     end
     
     def ==(other)
@@ -88,7 +89,7 @@ module Pinker
     end
     
     def problems_with(object, finder, options)
-      @rule.apply_to(object).problems
+      @rule.apply_to(object, options[:path].dup).problems
     end
   end
 

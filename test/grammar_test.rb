@@ -37,6 +37,7 @@ regarding "a grammar is a set of rules" do
     end
     
     test "not well-formed.  the shirt is tiny, but only large and small are allowed" do
+      assert{ @shirt_grammar.is_a?(Grammar) }
       result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("blue")))
       deny  { result.well_formed? }
       assert{ result.problems == 

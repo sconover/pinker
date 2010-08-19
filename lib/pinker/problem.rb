@@ -28,7 +28,7 @@ module Pinker
   end
 
   class Problem
-    include ValueEquality
+    attr_reader :condition, :actual_object, :options
   
     def initialize(condition, actual_object, options={})
       @condition = condition
@@ -44,6 +44,12 @@ module Pinker
       else
         inspect
       end
+    end
+    
+    def ==(other)
+      @condition == other.condition &&
+      @actual_object == other.actual_object &&
+      @options[:custom_message_template] == other.options[:custom_message_template]
     end
   end
 end
