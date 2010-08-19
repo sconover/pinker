@@ -11,6 +11,89 @@ autogen stuff...delete it out of predicated, even?
 conditions, finders, holders.  too much code / not elegant / too many little choices?
 
 
+
+what do I want to say?
+
+
+object is a Shirt
+
+Shirt color must be red / Shirts must be red
+
+Shirt size should be one of: small, large
+  ...ideally there's no repetition of small, large
+
+Shirt buttons is an Enumerable
+ ==> each button is well-formed / conforms to the Button rule
+
+
+
+translated to code...
+
+
+#object is a Shirt
+#...object conforms to rule Shirt
+conform_to_rule(Shirt){self}
+
+Shirt color must be red / Shirts must be red
+condition("Shirts must be red"){@color == "red"}
+
+Shirt size must be either small or large
+condition(proc{"Shirt size must be either #{sizes.join(' or ')}"}, :sizes => %w{small, large}){sizes.include?(@size)}
+
+
+Shirt buttons is an Enumerable
+ ==> each button is well-formed / conforms to the Button rule
+
+
+say do
+  @buttons.is_a?(Enumerable)
+  @buttons.each{|button|conform_to_rule(Button){button}}
+end
+
+
+
+
+trying again
+
+
+rule(Shirt) do
+  declare("Shirts must be red"){@color == "red"}
+  declare(proc{"Shirt size must be either #{sizes.join(' or ')}"}, :sizes => %w{small, large}){sizes.include?(@size)}
+  declare("Shirts have many buttons"){@buttons.is_a?(Enumerable)}
+  declare{@buttons.each{|button|conform_to_rule(button, Button)}}
+end
+
+rule(Button) do
+  declare(proc{"Buttons have either #{holes.join(' or ')} holes"}, :holes => [2,4]){holes.include?(@holes)}
+
+  # is this what the transform the convenient case into under the hood?
+  declare do
+    holes.include?(@holes) || fail("Buttons have either #{holes.join(' or ')} holes")
+  end
+
+  declare do
+    holes.include?(@holes) || fail("Invalid number of holes", :expected => holes, :actual => @holes)
+  end
+
+  declare("Invalid number of holes", :expected => proc{holes}, :actual => proc{@holes}){holes.include?(@holes)}
+
+  block.call || fail(failure_message)
+end
+
+====>
+  declare("Shirts must be red"){@color == "red"}
+    ...this must be a method temporarily bolted on to the side of the object - then removed - 
+			so we get the instance variables and methods, cleanly, just like a method would
+
+  declare(proc{"Buttons have either #{holes.join(' or ')} holes"}, :holes => [2,4]){holes.include?(@holes)}
+    whatever you define on the right side turns into a local variable.
+
+  what about dynamic evaluation of :holes and such?  optional proc form?
+
+  conform_to_rule and message should be scoped to the method we bolt on...
+
+
+
 what do I want to read?
 
 bind_rule(object, rule(Shirt))  #the first rule
@@ -21,6 +104,24 @@ Grammar.new(Shirt) do
   bind_rule(object, rule(Shirt))
 
   rule(Shirt) do
-    condition{@buttons.each{|button|bind_rule(button, Button)}}
+    condition{@size}
   end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+condition{@buttons.each{|button|bind_rule(button, Button)}}
