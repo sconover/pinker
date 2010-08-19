@@ -1,0 +1,26 @@
+things i like
+
+- terse, readable specification in one place about how an object graph ought to be constrained.
+- the grammar metaphor helps me think
+- how rules are applied to parts of the object
+
+iffy
+
+predicates
+autogen stuff...delete it out of predicated, even?
+conditions, finders, holders.  too much code / not elegant / too many little choices?
+
+
+what do I want to read?
+
+bind_rule(object, rule(Shirt))  #the first rule
+
+
+Grammar.new(Shirt) do
+
+  bind_rule(object, rule(Shirt))
+
+  rule(Shirt) do
+    condition{@buttons.each{|button|bind_rule(button, Button)}}
+  end
+end
