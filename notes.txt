@@ -58,10 +58,20 @@ trying again
 
 rule(Shirt) do
   declare("Shirts must be red"){@color == "red"}
-  declare(proc{"Shirt size must be either #{sizes.join(' or ')}"}, :sizes => %w{small, large}){sizes.include?(@size)}
+  declare{conform_to_rule(@color, Color)}
+  declare do
+    expected_sizes = %w{small, large}
+    expected_sizes.include?(@size) || fail("Invalid size", :expected => expected_sizes, :actual => @size)
+  end
   declare("Shirts have many buttons"){@buttons.is_a?(Enumerable)}
   declare{@buttons.each{|button|conform_to_rule(button, Button)}}
 end
+
+declare("Shirts must be red"){@color == "red"}
+  ==>
+  declare{ @color == "red" || fail("Shirts must be red") }
+  
+
 
 rule(Button) do
   declare(proc{"Buttons have either #{holes.join(' or ')} holes"}, :holes => [2,4]){holes.include?(@holes)}

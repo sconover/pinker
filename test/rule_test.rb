@@ -12,7 +12,73 @@ include Pinker
 
   #symbol (vs class)
     #symbol plus class?
+
+
 regarding "a rule" do
+
+  class Color
+    include ValueEquality
+    def initialize(name)
+      @name = name
+    end
+  
+    def name_x
+      @name + "x"
+    end
+  end
+  
+  class Shirt
+    include ValueEquality
+    def initialize(size, color)
+      @size = size
+      @color = color
+    end
+  end
+    
+
+
+  before do
+    @red_rule = 
+      Rule.new(Color) do 
+        declare{@name=="red"}
+      end
+  end
+  
+  regarding "basics - build a rule and apply_to it against an object" do
+
+    test "basic apply_to" do
+      assert{ @red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { @red_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+    test "instance variable" do
+      blue_rule = 
+        Rule.new(Color) do 
+          declare{@name=="blue"}
+        end
+
+      assert{ blue_rule.apply_to(Color.new("blue")).satisfied? }
+      deny  { blue_rule.apply_to(Color.new("red")).satisfied? }
+    end
+  
+    test "methods" do
+      green_rule = 
+        Rule.new(Color) do 
+          declare{name_x=="greenx"}
+        end
+
+      assert{ green_rule.apply_to(Color.new("green")).satisfied? }
+      deny  { green_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+  end
+
+
+
+end
+
+
+regarding "a rule, old style" do
 
   class Color
     include ValueEquality

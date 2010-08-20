@@ -19,6 +19,7 @@ module Pinker
       other_rules = @other_rules
       conditions = @conditions
       Module.new do
+        extend DeclarationContext
         extend ConditionContext
         @other_rules = other_rules
         @conditions = conditions
@@ -59,6 +60,33 @@ module Pinker
       @problems.empty?
     end
   end
+
+  module DeclarationContext
+    def declare(&block)
+      declaration = Declaration.new(&block)
+      @conditions << declaration
+      declaration
+    end
+  end
+  
+  class Declaration
+    def initialize(&block)
+      @block = block
+    end
+    
+    def problems_with(object, path)
+      path.push(self)
+      object.instance_eval(&@block) ? [] : Problems.new.push(Problem.new(self, object))
+    end
+  end
+
+
+
+
+
+
+
+
 
   class RuleReference
     attr_reader :rule_key
