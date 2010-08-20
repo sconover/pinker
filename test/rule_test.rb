@@ -140,6 +140,28 @@ regarding "a rule" do
   end
 
 
+  regarding "typing and nil" do
+    
+    class Shade < Color
+    end
+    
+    test "failure if object type is not the same as the type known to the rule" do
+      empty_rule = Rule.new(Color)
+      assert{ empty_rule.apply_to(Color.new("zzz")).satisfied? }
+      assert{ empty_rule.apply_to(Shade.new("zzz")).satisfied? }
+      deny  { empty_rule.apply_to("zzz").satisfied? }
+    end
+    
+    test "but a rule allowing nil should work" do
+      weird_rule = Rule.new(Color) {declare{@name.nil? || !@name.nil?}}
+      assert{ weird_rule.apply_to(Color.new("zzz")).satisfied? }
+      assert{ weird_rule.apply_to(nil).satisfied? }
+      deny  { weird_rule.apply_to("zzz").satisfied? }
+    end
+    
+  end
+
+
 end
 
 
