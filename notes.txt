@@ -1,3 +1,30 @@
+From rails:
+
+      def compile!(render_symbol, local_assigns)
+        locals_code = local_assigns.keys.map { |key| "#{key} = local_assigns[:#{key}];" }.join
+
+        source = <<-end_src
+          def #{render_symbol}(local_assigns)
+            old_output_buffer = output_buffer;#{locals_code};#{compiled_source}
+          ensure
+            self.output_buffer = old_output_buffer
+          end
+        end_src
+
+        begin
+          ActionView::Base::CompiledTemplates.module_eval(source, filename.to_s, 0)
+        rescue Exception => e # errors from template code
+          if logger = defined?(ActionController) && Base.logger
+            logger.debug "ERROR: compiling #{render_symbol} RAISED #{e}"
+            logger.debug "Function body: #{source}"
+            logger.debug "Backtrace: #{e.backtrace.join("\n")}"
+          end
+
+          raise ActionView::TemplateError.new(self, {}, e)
+        end
+      end
+
+==========================
 http://www.dcmanges.com/blog/ruby-dsls-instance-eval-with-delegation
 
 
