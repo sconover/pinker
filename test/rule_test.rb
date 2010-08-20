@@ -40,7 +40,7 @@ regarding "a rule" do
   before do
     @red_rule = 
       Rule.new(Color) do 
-        declare{@name=="red"}
+        declare("Must be red."){@name=="red"}
       end
   end
   
@@ -73,6 +73,66 @@ regarding "a rule" do
 
   end
 
+  regarding "apply_to is like apply_to but it gives more detail when things go wrong" do
+    
+    test "apply_to / result satisfied?" do
+      assert{ @red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { @red_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+    test "show problems" do
+      assert{ @red_rule.apply_to(Color.new("red")).problems.empty? }
+      assert{ 
+        @red_rule.apply_to(Color.new("blue")).problems == 
+          Problems.new.push(Problem.new(Declaration.new("Must be red."), Color.new("blue")))
+      }
+    end
+
+    test "conform to another rule" do
+      red_rule = @red_rule #block scoping
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare{red_rule.apply_to(@color)}
+        end
+      
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
+                Problems.new.push(Problem.new(Declaration.new("Must be red."), Color.new("blue"))) }
+    end
+    
+    test "no weird side effects of evaluation..." do
+      red_rule = @red_rule #block scoping
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare{red_rule.apply_to(@color)}
+        end
+        
+      shirt = Shirt.new("large", Color.new("red"))
+      shirt_rule.apply_to(shirt)
+      
+      deny  { shirt.respond_to?(:declare) }
+      deny  { shirt.respond_to?(:conform_to_rule) }
+    end
+    
+    xtest "more complex rule" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare{@size=="large"}
+          declare{conform_to_rule(@color, @red_rule)}
+        end
+
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
+  
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
+                Problems.new{problem(condition("@name", Eq("red")), "blue")} }
+      assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
+                Problems.new{problem(condition("@size", Eq("large")), "small")} }
+      assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
+                Problems.new{problem(condition("@size", Eq("large")), "small")
+                             problem(condition("@name", Eq("red")), "blue")} }
+    end
+
+  end
 
 
 end

@@ -16,6 +16,12 @@ module Pinker
     end
   end
   
+  class Declaration
+    def inspect(indent="")
+      to_s
+    end
+  end
+  
   class RuleReference
     include PrintSupport
     

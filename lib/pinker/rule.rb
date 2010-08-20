@@ -62,21 +62,38 @@ module Pinker
   end
 
   module DeclarationContext
-    def declare(&block)
-      declaration = Declaration.new(&block)
+    def declare(failure_message=nil, &block)
+      declaration = Declaration.new(failure_message, &block)
       @conditions << declaration
       declaration
     end
   end
   
   class Declaration
-    def initialize(&block)
+    attr_reader :failure_message
+    
+    def initialize(failure_message, &block)
+      @failure_message = failure_message
       @block = block
     end
     
     def problems_with(object, path)
       path.push(self)
-      object.instance_eval(&@block) ? [] : Problems.new.push(Problem.new(self, object))
+      result = object.instance_eval(&@block)
+      
+      if result.is_a?(Problems)
+        result
+      elsif result.is_a?(ResultOfRuleApplication)
+        result.problems
+      elsif !result
+        Problems.new.push(Problem.new(self, object))
+      else
+        []
+      end
+    end
+    
+    def ==(other)
+      @failure_message == other.failure_message
     end
   end
 
