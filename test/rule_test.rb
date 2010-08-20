@@ -111,25 +111,30 @@ regarding "a rule" do
       shirt_rule.apply_to(shirt)
       
       deny  { shirt.respond_to?(:declare) }
-      deny  { shirt.respond_to?(:conform_to_rule) }
     end
     
-    xtest "more complex rule" do
+    test "more complex rule" do
+      red_rule = @red_rule #block scoping
       shirt_rule =
         Rule.new(Shirt) do
-          declare{@size=="large"}
-          declare{conform_to_rule(@color, @red_rule)}
+          declare{red_rule.apply_to(@color)}
+          declare("Must be large."){@size=="large"}
         end
 
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
   
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
-                Problems.new{problem(condition("@name", Eq("red")), "blue")} }
+                Problems.new.push(Problem.new(Declaration.new("Must be red."), Color.new("blue"))) }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
-                Problems.new{problem(condition("@size", Eq("large")), "small")} }
+                Problems.new.push(Problem.new(Declaration.new("Must be large."), 
+                                              Shirt.new("small", Color.new("red")))) }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
-                Problems.new{problem(condition("@size", Eq("large")), "small")
-                             problem(condition("@name", Eq("red")), "blue")} }
+                Problems.new.push(
+                  Problem.new(Declaration.new("Must be red."), Color.new("blue")),
+                  Problem.new(Declaration.new("Must be large."), 
+                                              Shirt.new("small", Color.new("blue")))
+                )
+      }
     end
 
   end
