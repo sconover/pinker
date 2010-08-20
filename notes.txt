@@ -1,3 +1,35 @@
+http://www.dcmanges.com/blog/ruby-dsls-instance-eval-with-delegation
+
+
+
+instance_eval + delegation
+
+So the problem is that instance_eval hijacks self, making our method call to name fail. But what if we can get the name call sent back to the object that it would have gone to if we didn't change self?
+
+We can accomplish this by capturing what self is before we change it with instance_eval. Then if our class doesn't respond to a method, we'll assume it was meant for the original receiver.
+
+class TableDefinition
+  def evaluate(&block)
+    @self_before_instance_eval = eval "self", block.binding
+    instance_eval &block
+  end
+  
+  def method_missing(method, *args, &block)
+    @self_before_instance_eval.send method, *args, &block
+  end
+end
+
+
+This is tricky.  But I want natural access to the internals of an object without "infecting"
+the object with eval'd methods and such...
+
+
+
+
+
+
+=============================
+
 things i like
 
 - terse, readable specification in one place about how an object graph ought to be constrained.
