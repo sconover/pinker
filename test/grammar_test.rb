@@ -26,12 +26,12 @@ regarding "a grammar is a set of rules" do
       @shirt_grammar =
         Grammar.new(Shirt) do
           rule(Shirt) do
-            condition("@size", Or(Eq("small"), Eq("large"))) #future: replace with In
-            condition("@color", rule(Color))
+            declare("Size must be either large or small."){%w{small large}.include?(@size)}
+            declare{rule[Color].apply_to(@color)}
           end
       
           rule(Color) do
-            condition("@name", Or(Eq("red"), Eq("blue"))) #future: replace with In
+            declare("Color must be either red or blue."){%w{red blue}.include?(@name)}
           end
         end    
     end
@@ -41,10 +41,11 @@ regarding "a grammar is a set of rules" do
       result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("blue")))
       deny  { result.well_formed? }
       assert{ result.problems == 
-                Problems.new do
-                  problem(condition("@size", Or(Eq("small"), Eq("large"))), "tiny", 
-                          :path => [@shirt_grammar])
-                end }
+                Problems.new.push(
+                  Problem.new(Declaration.new("Size must be either large or small."), 
+                              Shirt.new("tiny", Color.new("blue")))
+                )
+      }
     end
     
     test "simple grammar" do

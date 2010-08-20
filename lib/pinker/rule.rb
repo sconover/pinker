@@ -36,7 +36,7 @@ module Pinker
       end
       
       path.push(self)
-      problems.push(*@conditions.problems_with(object, path.dup))
+      problems.push(*@conditions.problems_with(object, path.dup, {:rule => @other_rules}))
       
       ResultOfRuleApplication.new(problems)
     end
@@ -77,9 +77,10 @@ module Pinker
       @block = block
     end
     
-    def problems_with(object, path)
+    def problems_with(object, path, context)
       path.push(self)
-      result = object.instance_eval(&@block)
+
+      result = instance_exec_block_with_context_as_local_variables(object, context)
       
       if result.is_a?(Problems)
         result
@@ -90,20 +91,28 @@ module Pinker
       else
         []
       end
+      
     end
-    
+        
     def ==(other)
       @failure_message == other.failure_message
     end
+    
+    private
+
+    def instance_exec_block_with_context_as_local_variables(object, context)
+      context_arr = context.to_a
+      context_keys = []
+      context_values = []
+      context_arr.each{|k,v|context_keys << k; context_values << v}
+      
+      outer_block_with_local_variables = eval(%{proc do |#{context_keys.join(",")},_block_|
+        self.instance_eval(&_block_)
+      end})
+      object.instance_exec(*(context_values + [@block]), &outer_block_with_local_variables)
+    end
+
   end
-
-
-
-
-
-
-
-
 
   class RuleReference
     attr_reader :rule_key

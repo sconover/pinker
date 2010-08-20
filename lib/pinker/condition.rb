@@ -38,10 +38,10 @@ module Pinker
   end
 
   class Conditions < Array
-    def problems_with(object, path)
+    def problems_with(object, path, context)
       problems = Problems.new
       each do |condition|
-        problems.push(*condition.problems_with(object, path.dup))
+        problems.push(*condition.problems_with(object, path.dup, context))
       end
       problems
     end
@@ -60,7 +60,7 @@ module Pinker
       @options = options
     end
     
-    def problems_with(object, path)
+    def problems_with(object, path, context)
       object_part = @finder.pluck_from(object)
       path.push(self)
       @constraint.problems_with(object_part, @finder, @options.merge(:path => path.dup))
