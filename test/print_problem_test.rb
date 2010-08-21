@@ -10,14 +10,14 @@ regarding "problem printing" do
   regarding "problems looks nice with you to_s them" do
       
     test "simple" do
-      assert{ Problems.new{ problem(condition("@name", Eq("red")), "blue") }.to_s == 
-                %{Problems[@name->Eq('red'):"blue"]} }
+      assert{ Problems.new.push(Problem.new(Declaration.new("Must be red."), "blue")).to_s == 
+                %{Problems['Must be red.':"blue"]} }
 
-      assert{ Problems.new{ 
-                problem(condition("@name", Eq("red")), "blue") 
-                problem(condition("@weight", Eq(9)), 8) 
-              }.to_s == 
-                %{Problems[@name->Eq('red'):"blue",@weight->Eq(9):8]} }
+      assert{ Problems.new.push(
+                Problem.new(Declaration.new("Must be red."), "blue"),
+                Problem.new(Declaration.new("Must be 9 ounces."), 8)
+              ).to_s == 
+                %{Problems['Must be red.':"blue",'Must be 9 ounces.':8]} }
     end
     
   end
@@ -25,22 +25,22 @@ regarding "problem printing" do
   regarding "inspect is like to_s except it's multiline, so you see the tree structure" do
 
     test "simple" do
-      assert{ Problems.new{ problem(condition("@name", Eq("red")), "blue") }.inspect == 
+      assert{ Problems.new.push(Problem.new(Declaration.new("Must be red."), "blue")).inspect == 
 %{Problems[
-  @name->Eq('red')
+  'Must be red.'
     ==> "blue"
 ]} }
     end
     
     test "two problems" do
-      assert{ Problems.new{ 
-                problem(condition("@name", Eq("red")), "blue") 
-                problem(condition("@weight", Eq(9)), 8) 
-              }.inspect == 
+      assert{ Problems.new.push(
+                Problem.new(Declaration.new("Must be red."), "blue"),
+                Problem.new(Declaration.new("Must be 9 ounces."), 8)
+              ).inspect == 
 %{Problems[
-  @name->Eq('red')
+  'Must be red.'
     ==> "blue",
-  @weight->Eq(9)
+  'Must be 9 ounces.'
     ==> 8
 ]} }
     end

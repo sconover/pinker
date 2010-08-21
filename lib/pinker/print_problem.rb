@@ -16,12 +16,12 @@ module Pinker
 
   class Problem
     def inspect(indent="")
-      @condition.inspect(indent) + "\n" + 
+      indent + "'" + @condition.failure_message + "'" + "\n" + 
       indent + "  ==> " + @actual_object.inspect
     end    
     
     def to_s
-      @condition.to_s + ":" + @actual_object.inspect
+      "'" + @condition.failure_message + "'" + ":" + @actual_object.inspect
     end
   end
 end

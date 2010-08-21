@@ -62,11 +62,12 @@ regarding "grammar result printing" do
     end
 
     it "fails" do
-      assert{ ResultOfGrammarApplication.new(Problems.new{ 
-                problem(condition("@name", Eq("red")), "blue") 
-                problem(condition("@weight", Eq(9)), 8) 
+      assert{ ResultOfGrammarApplication.new(Problems.new.push(
+                  Problem.new(Declaration.new("Must be red."), "blue"),
+                  Problem.new(Declaration.new("Must be 9 ounces."), 8)
+                ){ 
               }).to_s == 
-              %{Result:Not-Well-Formed:Problems[@name->Eq('red'):"blue",@weight->Eq(9):8]}
+              %{Result:Not-Well-Formed:Problems['Must be red.':"blue",'Must be 9 ounces.':8]}
       }
     end
   end
@@ -77,15 +78,15 @@ regarding "grammar result printing" do
     end    
     
     test "fails" do
-      assert{ ResultOfGrammarApplication.new(Problems.new{ 
-                problem(condition("@name", Eq("red")), "blue") 
-                problem(condition("@weight", Eq(9)), 8) 
-              }).inspect == 
+      assert{ ResultOfGrammarApplication.new(Problems.new.push(
+                Problem.new(Declaration.new("Must be red."), "blue"),
+                Problem.new(Declaration.new("Must be 9 ounces."), 8)
+              )).inspect == 
 %{Result:Not-Well-Formed:
   Problems[
-    @name->Eq('red')
+    'Must be red.'
       ==> "blue",
-    @weight->Eq(9)
+    'Must be 9 ounces.'
       ==> 8
   ]} }
     end
