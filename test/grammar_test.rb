@@ -80,8 +80,8 @@ regarding "a grammar is a set of rules" do
       shirt_grammar_with_no_color_rule_defined =
         Grammar.new(Shirt) do
           rule(Shirt) do
-            condition("@size", Or(Eq("small"), Eq("large"))) #future: replace with In
-            condition("@color", rule(Color))
+            declare{["small", "large"].include?(@size)}
+            with_rule(Color){|rule|rule.apply_to(@color)}
           end
         end
     end
