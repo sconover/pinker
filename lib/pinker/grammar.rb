@@ -45,12 +45,11 @@ module Pinker
     def grammar_grammar
       Grammar.new(Grammar) do
         rule(Grammar) do
-          condition("@rules", rule(Rules))
+          with_rule(Rules){|rule|rule.apply_to(@rules)}
         end
         
         rule(Rules) do
-          condition(_object_, Not(Empty?), 
-                    :custom_message_template => 'A Grammar must have at least one Rule.\n#{path.first.inspect}')
+          declare('A Grammar must have at least one Rule.'){!self.empty?}
         end
       end
     end
@@ -82,9 +81,15 @@ module Pinker
   end
   
   class RuleDeclaration < AbstractDeclaration
+    attr_reader :rule_key
+    
     def initialize(rule_key, &block)
       @rule_key = rule_key
       @block = block
+    end
+    
+    def ==(other)
+      @rule_key == other.rule_key
     end
   end
   
@@ -92,7 +97,7 @@ module Pinker
     def with_rule(rule_key, &block)
       other_rules = @other_rules
       declaration = RuleDeclaration.new(rule_key){self.instance_exec(other_rules[rule_key], &block)}
-      @conditions << declaration
+      @declarations << declaration
       declaration
     end
   end

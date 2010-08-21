@@ -1,28 +1,26 @@
 require "pinker/core"
-require "pinker/condition"
 require "pinker/problem"
 
 module Pinker
   
   class Rule
-    attr_reader :name_or_class, :conditions
+    attr_reader :name_or_class, :declarations
     def initialize(name_or_class, options={}, &block)
       @name_or_class = name_or_class
       @other_rules = options[:other_rules]
       
-      @conditions = Conditions.new
+      @declarations = Declarations.new
       
       add(&block) if block
     end
     
     def add(&block)
       other_rules = @other_rules
-      conditions = @conditions
+      declarations = @declarations
       Module.new do
         extend DeclarationContext
-        extend ConditionContext
         @other_rules = other_rules
-        @conditions = conditions
+        @declarations = declarations
         instance_eval(&block)
       end
     end
@@ -30,20 +28,18 @@ module Pinker
     def apply_to(object, path=[])
       problems = Problems.new
       unless object.nil? || object.is_a?(name_or_class)
-        problems.compose do
-          problem(condition(_object_, IsA?(name_or_class)), object)
-        end
+        problems.push(Problem.new(Declaration.new("Must be type #{name_or_class.name}"), object))
       end
       
       path.push(self)
-      problems.push(*@conditions.problems_with(object, path.dup, {:rule => @other_rules}))
+      problems.push(*@declarations.problems_with(object, path.dup, {:rule => @other_rules}))
       
       ResultOfRuleApplication.new(problems)
     end
     
     def ==(other)
       @name_or_class == other.name_or_class &&
-      @conditions == other.conditions
+      @declarations == other.declarations
     end
   end
   
@@ -61,10 +57,24 @@ module Pinker
     end
   end
 
+  class Declarations < Array
+    def problems_with(object, path, context)
+      problems = Problems.new
+      each do |declaration|
+        problems.push(*declaration.problems_with(object, path.dup, context))
+      end
+      problems
+    end
+    
+    def evaluate_all(object)
+      problems_with(object).empty?
+    end
+  end
+
   module DeclarationContext
     def declare(failure_message=nil, &block)
       declaration = Declaration.new(failure_message, &block)
-      @conditions << declaration
+      @declarations << declaration
       declaration
     end
   end
@@ -102,45 +112,6 @@ module Pinker
     
   end
 
-  class RuleReference
-    attr_reader :rule_key
-    
-    def initialize(rule_key, other_rules)
-      @rule_key = rule_key
-      @other_rules = other_rules
-    end
-    
-    def resolve_rule
-      @other_rules[@rule_key]
-    end
-    
-    def problems_with(object, finder, options)
-      resolve_rule.apply_to(object, options[:path].dup).problems
-    end
-    
-    def ==(other)
-      @rule_key == other.rule_key
-    end
-  end
-  
-  class RuleHolder
-    include ValueEquality
-    
-    def initialize(rule)
-      @rule = rule
-    end
-    
-    def problems_with(object, finder, options)
-      @rule.apply_to(object, options[:path].dup).problems
-    end
-  end
-
-  module ConditionContext
-    def rule(key)
-      RuleReference.new(key, @other_rules)
-    end
-  end
-  
 end
 
 require "pinker/print_rule"

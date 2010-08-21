@@ -44,7 +44,6 @@ regarding "rule printing" do
   regarding "inspect is like to_s except it's multiline, so you see the tree structure" do
     
     test "one declaration" do
-      red_color_rule = Rule.new(:red_color_rule) { condition("@name", Eq("red")) }
       assert {
         Rule.new(Shirt) do 
           declare("Must be red."){@color == "red"}

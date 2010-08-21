@@ -1,5 +1,4 @@
 require "pinker/print_support"
-require "pinker/print_condition"
 
 module Pinker
   class Problems
@@ -16,12 +15,12 @@ module Pinker
 
   class Problem
     def inspect(indent="")
-      indent + "'" + @condition.failure_message + "'" + "\n" + 
+      indent + "'" + @declaration.failure_message + "'" + "\n" + 
       indent + "  ==> " + @actual_object.inspect
     end    
     
     def to_s
-      "'" + @condition.failure_message + "'" + ":" + @actual_object.inspect
+      "'" + @declaration.failure_message + "'" + ":" + @actual_object.inspect
     end
   end
 end
