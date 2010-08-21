@@ -1,3 +1,7 @@
+add a method to the block's self before instance eval???
+
+
+
 From rails:
 
       def compile!(render_symbol, local_assigns)
