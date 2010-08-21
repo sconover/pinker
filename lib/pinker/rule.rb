@@ -69,14 +69,7 @@ module Pinker
     end
   end
   
-  class Declaration
-    attr_reader :failure_message
-    
-    def initialize(failure_message, &block)
-      @failure_message = failure_message
-      @block = block
-    end
-    
+  class AbstractDeclaration
     def problems_with(object, path, context)
       path.push(self)
 
@@ -92,6 +85,15 @@ module Pinker
         []
       end
       
+    end    
+  end
+  
+  class Declaration < AbstractDeclaration
+    attr_reader :failure_message
+    
+    def initialize(failure_message=nil, &block)
+      @failure_message = failure_message
+      @block = block
     end
         
     def ==(other)

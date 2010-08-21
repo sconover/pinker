@@ -150,4 +150,5 @@ regarding "prove value equality" do
     assert { Declaration.new("a") == Declaration.new("a") }
     deny   { Declaration.new("a") == Declaration.new("ZZ") }
   end
+
 end

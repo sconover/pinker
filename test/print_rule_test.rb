@@ -3,6 +3,18 @@ require "./test/test_helper"
 require "pinker/rule"
 include Pinker
 
+
+regarding "declaration printing" do
+  test "prints 'no message' if no message was provided." do
+    assert{ Declaration.new.to_s == "declare:<no message>" }
+  end
+
+  test "prints the failure message if a message was provided." do
+    assert{ Declaration.new("Must be red.").to_s == "declare:'Must be red.'" }
+  end
+
+end
+
 regarding "rule printing" do
   class Color; end
   class Shirt; end
@@ -10,48 +22,20 @@ regarding "rule printing" do
   regarding "a rule looks nice with you to_s it" do
       
     test "simple" do
-      assert{ Rule.new(Color) { condition("@name", Eq("red")) }.to_s == 
-                %{Rule(Color)[@name->Eq('red')]} }
+      assert{ Rule.new(Color) { declare("Must be red."){@name == "red"} }.to_s == 
+                %{Rule(Color)[declare:'Must be red.']} }
 
-      assert{ Rule.new(Color) { condition(_object_, Eq("red")) }.to_s == 
-                %{Rule(Color)[_object_->Eq('red')]} }
-
-      assert{ Rule.new(:red_color_rule) { condition("@name", Eq("red")) }.to_s == 
-                %{Rule(:red_color_rule)[@name->Eq('red')]} }
-
-      assert{ Rule.new(Color) { condition(:name, Eq("red")) }.to_s == 
-                %{Rule(Color)[:name->Eq('red')]} }
+      assert{ Rule.new(:red_color_rule) {}.to_s == 
+                %{Rule(:red_color_rule)[]} }
     end
     
-    test "several conditions" do
+    test "several declarations" do
       assert {
         Rule.new(Shirt) do 
-          condition("@color", Eq("red"))
-          condition(:size, Eq("large"))
+          declare{@color=="red"}
+          declare("Size must be large"){size=="large"}
         end.to_s ==
-        %{Rule(Shirt)[@color->Eq('red'),:size->Eq('large')]}
-      }
-    end
-    
-    test "points to another rule" do
-      red_color_rule = Rule.new(:red_color_rule) { condition("@name", Eq("red")) }
-      assert {
-        Rule.new(Shirt) {condition("@color", red_color_rule)}.to_s ==
-          %{Rule(Shirt)[@color->Rule(:red_color_rule)[@name->Eq('red')]]}
-      }
-    end
-    
-    test "references another rule" do
-      assert {
-        Rule.new(Shirt) {condition("@color", rule(Color))}.to_s ==
-          %{Rule(Shirt)[@color->rule(Color)]}
-      }
-    end
-    
-    test "complex predicate" do
-      assert {
-        Rule.new(Shirt) {condition(:size, Or(Eq("large"),Eq("small")))}.to_s ==
-          %{Rule(Shirt)[:size->Or(Eq('large'),Eq('small'))]}
+        %{Rule(Shirt)[declare:<no message>,declare:'Size must be large']}
       }
     end
     
@@ -59,74 +43,32 @@ regarding "rule printing" do
 
   regarding "inspect is like to_s except it's multiline, so you see the tree structure" do
     
-    test "one condition" do
+    test "one declaration" do
       red_color_rule = Rule.new(:red_color_rule) { condition("@name", Eq("red")) }
       assert {
         Rule.new(Shirt) do 
-          condition("@color", red_color_rule)
+          declare("Must be red."){@color == "red"}
         end.inspect ==
 %{Rule(Shirt)[
-  @color->Rule(:red_color_rule)[
-    @name->Eq('red')
-  ]
+  declare:'Must be red.'
 ]
 }
       }
     end
   
-    test "more than one condition" do
-      red_color_rule = Rule.new(:red_color_rule) { condition("@name", Eq("red")) }
+    test "more than one declaration" do
       assert {
         Rule.new(Shirt) do 
-          condition("@color", red_color_rule)
-          condition("@color2", rule(Color))
-          condition(:size, Eq("large"))
+          declare("Must be button-down."){@style == "button-down"}
+          declare("Must be red."){@color == "red"}
         end.inspect ==
 %{Rule(Shirt)[
-  @color->Rule(:red_color_rule)[
-    @name->Eq('red')
-  ],
-  @color2->rule(Color),
-  :size->Eq('large')
+  declare:'Must be button-down.',
+  declare:'Must be red.'
 ]
 }
       }
     end
     
-    test "nesting" do
-      assert {
-        Rule.new(Shirt) do 
-          condition("@color", Rule.new(:red_color_rule) do 
-                                 condition("@name", Rule.new(:name_is_sam) do        
-                                                       condition("@first_name", Eq("Sam")) 
-                                                     end) 
-                               end)
-        end.inspect ==
-%{Rule(Shirt)[
-  @color->Rule(:red_color_rule)[
-    @name->Rule(:name_is_sam)[
-      @first_name->Eq('Sam')
-    ]
-  ]
-]
-}
-      }
-    end
-    
-    test "complex predicates chop down too" do
-      assert {
-        Rule.new(Shirt) do 
-          condition(:size, Or(Eq("large"),Eq("small")))
-        end.inspect ==
-%{Rule(Shirt)[
-  :size->Or(
-    Eq('large'),
-    Eq('small')
-  )
-]
-}
-      }
-
-    end
   end
 end

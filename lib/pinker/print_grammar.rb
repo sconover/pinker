@@ -17,6 +17,14 @@ module Pinker
   class Rules
     include ArrayPrintSupport
   end
+  
+  class RuleDeclaration < AbstractDeclaration
+    include PrintSupport
+    
+    def to_s
+      "declare:Rule(#{@rule_key.inspect})"
+    end
+  end
 
   class ResultOfGrammarApplication
     def inspect(indent="")

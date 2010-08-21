@@ -3,15 +3,24 @@ require "./test/test_helper"
 require "pinker/grammar"
 include Pinker
 
+
+#"with rule" should print differently...
+
+regarding "rule declaration" do
+  test "prints the rule" do
+    assert{ RuleDeclaration.new(:some_rule).to_s == "declare:Rule(:some_rule)" }
+  end
+end
+
 regarding "grammar printing" do
   class Color; end
   class Shirt; end
   
-  regarding "a grammar looks nice with you to_s it" do
+  regarding "a grammar looks nice when you to_s it" do
       
     test "simple" do
-      assert{ Grammar.new(:my_grammar){rule(Color){condition("@name", Eq("red"))}}.to_s == 
-                %{Grammar(:my_grammar)[Rule(Color)[@name->Eq('red')]]} }
+      assert{ Grammar.new(:my_grammar){rule(Color){declare("Must be red."){@name=="red"}}}.to_s == 
+                %{Grammar(:my_grammar)[Rule(Color)[declare:'Must be red.']]} }
     end
     
     test "several rules" do
@@ -26,18 +35,18 @@ regarding "grammar printing" do
       assert {
         Grammar.new(:my_grammar) do
           rule(Shirt) do 
-            condition("@color", rule(:red_color_rule))
+            with_rule(:red_color_rule){|rule|rule.apply_to(@color)}
           end
           rule(:red_color_rule) do 
-            condition("@name", Eq("red"))
+            declare{@name == "red"}
           end
         end.inspect ==
 %{Grammar(:my_grammar)[
   Rule(Shirt)[
-    @color->rule(:red_color_rule)
+    declare:Rule(:red_color_rule)
   ],
   Rule(:red_color_rule)[
-    @name->Eq('red')
+    declare:<no message>
   ]
 ]
 }

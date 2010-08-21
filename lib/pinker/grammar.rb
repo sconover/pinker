@@ -80,13 +80,20 @@ module Pinker
       rule
     end
   end
-
+  
+  class RuleDeclaration < AbstractDeclaration
+    def initialize(rule_key, &block)
+      @rule_key = rule_key
+      @block = block
+    end
+  end
+  
   module DeclarationContext
     def with_rule(rule_key, &block)
       other_rules = @other_rules
-      declare do
-        self.instance_exec(other_rules[rule_key], &block)
-      end
+      declaration = RuleDeclaration.new(rule_key){self.instance_exec(other_rules[rule_key], &block)}
+      @conditions << declaration
+      declaration
     end
   end
   

@@ -17,8 +17,11 @@ module Pinker
   end
   
   class Declaration
-    def inspect(indent="")
-      to_s
+    include PrintSupport
+    
+    def to_s
+      msg = @failure_message ? "'" + @failure_message + "'" : "<no message>"
+      "declare:#{msg}"
     end
   end
   
