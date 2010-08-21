@@ -6,12 +6,14 @@ include Pinker
 regarding "a grammar is a set of rules" do
 
   class Color
+    include ValueEquality
     def initialize(name)
       @name = name
     end
   end
   
   class Shirt
+    include ValueEquality
     def initialize(size, color)
       @size = size
       @color = color
@@ -27,7 +29,7 @@ regarding "a grammar is a set of rules" do
         Grammar.new(Shirt) do
           rule(Shirt) do
             declare("Size must be either large or small."){%w{small large}.include?(@size)}
-            declare{rule[Color].apply_to(@color)}
+            with_rule(Color){|rule|rule.apply_to(@color)}
           end
       
           rule(Color) do
@@ -38,13 +40,10 @@ regarding "a grammar is a set of rules" do
     
     test "not well-formed.  the shirt is tiny, but only large and small are allowed" do
       assert{ @shirt_grammar.is_a?(Grammar) }
-      result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("blue")))
+      result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("red")))
       deny  { result.well_formed? }
       assert{ result.problems == 
-                Problems.new.push(
-                  Problem.new(Declaration.new("Size must be either large or small."), 
-                              Shirt.new("tiny", Color.new("blue")))
-                )
+                Problems.new.push(Problem.new(Declaration.new("Size must be either large or small."), Shirt.new("tiny", Color.new("red"))))
       }
     end
     

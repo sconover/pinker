@@ -11,7 +11,7 @@ module Pinker
       
       add(&block) if block
     end
-    
+
     def add(&block)
       rules = @rules
       Module.new do
@@ -80,6 +80,15 @@ module Pinker
       rule
     end
   end
+
+  module DeclarationContext
+    def with_rule(rule_key, &block)
+      other_rules = @other_rules
+      declare do
+        self.instance_exec(other_rules[rule_key], &block)
+      end
+    end
+  end
   
   class Rules < Array
     def [](key)
@@ -94,14 +103,6 @@ module Pinker
     end
   end
 
-  module RuleContext
-    def rule(name_or_class, &block)
-      rule = Rule.new(name_or_class, :other_rules => @rules, &block)
-      @rules << rule
-      rule
-    end
-  end
-  
 end
 
 require "pinker/print_grammar"

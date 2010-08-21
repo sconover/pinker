@@ -80,7 +80,7 @@ module Pinker
     def problems_with(object, path, context)
       path.push(self)
 
-      result = instance_exec_block_with_context_as_local_variables(object, context)
+      result = object.instance_eval(&@block)
       
       if result.is_a?(Problems)
         result
@@ -98,20 +98,6 @@ module Pinker
       @failure_message == other.failure_message
     end
     
-    private
-
-    def instance_exec_block_with_context_as_local_variables(object, context)
-      context_arr = context.to_a
-      context_keys = []
-      context_values = []
-      context_arr.each{|k,v|context_keys << k; context_values << v}
-      
-      outer_block_with_local_variables = eval(%{proc do |#{context_keys.join(",")},_block_|
-        self.instance_eval(&_block_)
-      end})
-      object.instance_exec(*(context_values + [@block]), &outer_block_with_local_variables)
-    end
-
   end
 
   class RuleReference
