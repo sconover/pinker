@@ -8,7 +8,7 @@ include Pinker
 
 regarding "replicate json schema example in pinker" do
   
-  it "fails if the product is not an associative array" do
+  test "fails if the product is not an associative array" do
     json = []
 
     #the ruby json schema library doesn't actually fail here
@@ -17,7 +17,7 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Product must be an associative array" }
   end
   
-  it "fails if the name is missing" do
+  test "fails if the name is missing" do
     json = good_json
     json.delete("name")
     
@@ -25,7 +25,7 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Required field 'name' is missing" }
   end
   
-  it "fails if the id is missing" do
+  test "fails if the id is missing" do
     json = good_json
     json.delete("id")
 
@@ -33,7 +33,7 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Required field 'id' is missing" }
   end
   
-  it "fails if the price is missing" do
+  test "fails if the price is missing" do
     json = good_json
     json.delete("price")
 
@@ -41,7 +41,7 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Required field 'price' is missing" }
   end
   
-  it "doesn't fails if tags are missing, because tags is an optional field" do
+  test "doesn't fails if tags are missing, because tags is an optional field" do
     json = good_json
     json.delete("tags")
 
@@ -49,7 +49,7 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json) == nil }
   end
   
-  it "no failure on superfluous fields" do
+  test "no failure on superfluous fields" do
     json = good_json
     json["foo"] = 1
     json["bar"] = 2
@@ -57,6 +57,21 @@ regarding "replicate json schema example in pinker" do
     assert{ json_schema_error(json) == nil }
     assert{ grammar_error(json) == nil }
   end
+
+  test "fails if id is not a number" do
+    json = good_json
+    
+    json["id"] = 101
+    
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+
+    json["id"] = "abc"
+
+    assert{ json_schema_error(json).message == "Value abc for field 'id' is not of type number" }
+    assert{ grammar_error(json).message == "Value abc for field 'id' is not of type number" }
+  end
+
   
   def good_json
     {"id" => 101, "name" => "Jane", "price" => 19.99, "tags" => ["hot", "onsale"]}
@@ -77,6 +92,9 @@ regarding "replicate json schema example in pinker" do
           declare("Product must be an associative array"){is_a?(Hash)}
           %w{id name price}.each do |property_name|
             declare("Required field '#{property_name}' is missing"){key?(property_name)}
+          end
+          declare('Value #{actual_object["id"]} for field \'id\' is not of type number') do
+            self["id"].is_a?(Numeric)
           end
         end
       end
