@@ -1,5 +1,4 @@
 require "pinker/core"
-require "pinker/problem"
 
 module Pinker
   
@@ -109,7 +108,28 @@ module Pinker
     end
     
   end
+  
+  class Problem
+    attr_reader :declaration, :actual_object, :options
+  
+    def initialize(declaration, actual_object, options={})
+      @declaration = declaration
+      @actual_object = actual_object
+      @options = options
+    end
+    
+    def message
+      inspect
+    end
+    
+    def ==(other)
+      @declaration == other.declaration &&
+      @actual_object == other.actual_object &&
+      @options[:custom_message_template] == other.options[:custom_message_template]
+    end
+  end
+
 
 end
 
-require "pinker/print_rule"
+require "pinker/print/print_rule"

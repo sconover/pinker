@@ -115,4 +115,4 @@ module Pinker
 
 end
 
-require "pinker/print_grammar"
+require "pinker/print/print_grammar"

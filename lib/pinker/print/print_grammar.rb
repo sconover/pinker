@@ -1,4 +1,4 @@
-require "pinker/print_rule"
+require "pinker/print/print_rule"
 
 module Pinker
 
