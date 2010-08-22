@@ -33,6 +33,31 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Required field 'id' is missing" }
   end
   
+  it "fails if the price is missing" do
+    json = good_json
+    json.delete("price")
+
+    assert{ json_schema_error(json).message == "Required field 'price' is missing" }
+    assert{ grammar_error(json).message == "Required field 'price' is missing" }
+  end
+  
+  it "fails if tags are is missing" do
+    json = good_json
+    json.delete("tags")
+
+    assert{ json_schema_error(json).message == "Required field 'tags' is missing" }
+    assert{ grammar_error(json).message == "Required field 'tags' is missing" }
+  end
+  
+  it "no failure on superfluous fields" do
+    json = good_json
+    json["foo"] = 1
+    json["bar"] = 2
+
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+  end
+  
   def good_json
     {"id" => 101, "name" => "Jane", "price" => 19.99, "tags" => ["hot", "onsale"]}
   end
@@ -50,7 +75,7 @@ regarding "replicate json schema example in pinker" do
       Grammar.new(:json_schema_rfc_example) do
         rule(:product) do
           declare("Product must be an associative array"){is_a?(Hash)}
-          %w{id name}.each do |property_name|
+          %w{id name price tags}.each do |property_name|
             declare("Required field '#{property_name}' is missing"){key?(property_name)}
           end
         end
