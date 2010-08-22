@@ -29,10 +29,7 @@ module Pinker
     
     private
     def i_am_well_formed!
-      result = grammar_grammar.send(:apply_to_without_self_validation, self)
-      unless result.well_formed?
-        raise InvalidGrammarError.new(result.problems.first.message)
-      end
+      grammar_grammar.send(:apply_to_without_self_validation, self).well_formed!
     end
     
     def apply_to_without_self_validation(object)
@@ -67,6 +64,13 @@ module Pinker
     def well_formed?
       @problems.empty?
     end
+    
+    def well_formed!
+      unless well_formed?
+        raise InvalidGrammarError.new(problems.first.message)
+      end
+    end
+
   end
   
   module RuleContext

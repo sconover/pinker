@@ -60,6 +60,16 @@ regarding "a rule" do
       deny  { green_rule.apply_to(Color.new("blue")).satisfied? }
     end
 
+    test "symbol name for rule" do
+      rule_with_symbol_name = 
+        Rule.new(:color) do 
+          declare{@name=="red"}
+        end
+
+      assert{ rule_with_symbol_name.apply_to(Color.new("red")).satisfied? }
+      deny  { rule_with_symbol_name.apply_to(Color.new("blue")).satisfied? }
+    end
+
   end
 
   regarding "apply_to is like apply_to but it gives more detail when things go wrong" do

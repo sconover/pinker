@@ -26,7 +26,7 @@ module Pinker
     
     def apply_to(object)
       problems = []
-      unless object.nil? || object.is_a?(name_or_class)
+      unless object.nil? || !name_or_class.is_a?(Class) || object.is_a?(name_or_class)
         problems.push(Problem.new(Declaration.new("Must be type #{name_or_class.name}"), object, context={}))
       end
       
