@@ -24,14 +24,14 @@ module Pinker
       end
     end
     
-    def apply_to(object, path=[])
+    def apply_to(object)
       problems = []
       unless object.nil? || object.is_a?(name_or_class)
-        problems.push(Problem.new(Declaration.new("Must be type #{name_or_class.name}"), object))
+        problems.push(Problem.new(Declaration.new("Must be type #{name_or_class.name}"), object, context={}))
       end
       
-      path.push(self)
-      problems.push(*@declarations.problems_with(object, path.dup, {:rule => @other_rules}))
+      
+      problems.push(*@declarations.problems_with(object, context={}))
       
       ResultOfRuleApplication.new(problems)
     end
@@ -57,14 +57,10 @@ module Pinker
   end
 
   class Declarations < Array
-    def problems_with(object, path, context)
+    def problems_with(object, context)
       collect do |declaration|
-        declaration.problems_with(object, path.dup, context)
+        declaration.problems_with(object, context)
       end.flatten
-    end
-    
-    def evaluate_all(object)
-      problems_with(object).empty?
     end
   end
 
@@ -77,9 +73,7 @@ module Pinker
   end
   
   class AbstractDeclaration
-    def problems_with(object, path, context)
-      path.push(self)
-
+    def problems_with(object, context)
       result = object.instance_eval(&@block)
       
       if result.is_a?(Array)
@@ -87,7 +81,7 @@ module Pinker
       elsif result.is_a?(ResultOfRuleApplication)
         result.problems
       elsif !result
-        [Problem.new(self, object)]
+        [Problem.new(self, object, context)]
       else
         []
       end
@@ -110,22 +104,32 @@ module Pinker
   end
   
   class Problem
-    attr_reader :declaration, :actual_object, :options
+    attr_reader :declaration, :actual_object, :context
   
-    def initialize(declaration, actual_object, options={})
+    def initialize(declaration, actual_object, context={})
       @declaration = declaration
       @actual_object = actual_object
-      @options = options
+      @context = context
     end
     
     def message
-      inspect
+      context_str = %{
+        actual_object = @actual_object
+        #{@context.keys.collect{|k|"#{k} = @context[:#{k}]"}.join("\n")}
+        
+      }
+    
+      if @declaration.failure_message
+        eval(context_str + '"' + @declaration.failure_message + '"')
+      else
+        inspect
+      end
     end
     
     def ==(other)
       @declaration == other.declaration &&
       @actual_object == other.actual_object &&
-      @options[:custom_message_template] == other.options[:custom_message_template]
+      @context == context
     end
   end
 

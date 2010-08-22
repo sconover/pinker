@@ -24,22 +24,21 @@ module Pinker
     
     #have to have at least one rule...
     
-    def apply_to(object, path=[])
+    def apply_to(object)
       i_am_well_formed!      
-      apply_to_without_self_validation(object, path)
+      apply_to_without_self_validation(object)
     end
     
     private
     def i_am_well_formed!
-      result = grammar_grammar.send(:apply_to_without_self_validation, self, [self])
+      result = grammar_grammar.send(:apply_to_without_self_validation, self)
       unless result.well_formed?
         raise InvalidGrammarError.new(result.problems.first.message)
       end
     end
     
-    def apply_to_without_self_validation(object, path=[])
-      path.push(self)
-      ResultOfGrammarApplication.new(@rules.first.apply_to(object, path).problems)
+    def apply_to_without_self_validation(object)
+      ResultOfGrammarApplication.new(@rules.first.apply_to(object).problems)
     end
     
     def grammar_grammar
