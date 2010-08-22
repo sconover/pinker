@@ -113,6 +113,21 @@ regarding "a rule" do
       deny  { shirt.respond_to?(:declare) }
     end
     
+    test "optional declare form with call object" do
+      green_rule =
+        Rule.new(Color) do 
+          declare do |call|
+            @name=="green" || call.fail("Must be green.")
+          end
+        end
+
+      assert{ green_rule.apply_to(Color.new("green")).problems.empty? }
+      assert{ 
+        green_rule.apply_to(Color.new("blue")).problems == 
+          [Problem.new(Declaration.new("Must be green."), Color.new("blue"))]
+      }
+    end
+    
     test "more complex rule" do
       red_rule = @red_rule #block scoping
       shirt_rule =

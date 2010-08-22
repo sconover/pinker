@@ -84,20 +84,52 @@ module Pinker
   end
   
   class AbstractDeclaration
-    def problems_with(object, context)
-      result = object.instance_eval(&@block)
-      
-      if result.is_a?(Array)
-        result
-      elsif result.is_a?(ResultOfRuleApplication)
-        result.problems
-      elsif !result
-        [Problem.new(self, object, context)]
+    def call(actual_object, block=@block)
+      if block.arity<=0
+        call(actual_object, 
+          proc do |call|
+            call.result(self.instance_eval(&block))
+          end
+        )
       else
-        []
+        call = DeclarationCall.new(self, actual_object)
+        actual_object.instance_exec(call, &block)
+        call
       end
-      
-    end    
+    end
+    
+    def problems_with(actual_object, context)
+      call(actual_object).problems
+    end 
+  end
+  
+  class DeclarationCall
+    attr_reader :problems
+    
+    def initialize(declaration, actual_object)
+      @declaration = declaration
+      @actual_object = actual_object
+      @problems = []
+    end
+    
+    def fail(failure_message=nil)
+      declaration = 
+        failure_message ? 
+          @declaration.with_new_failure_message(failure_message) :
+          @declaration
+          
+      @problems.push(Problem.new(declaration, @actual_object, {}))
+    end
+    
+    def result(block_output)
+      if block_output.is_a?(Array)
+        @problems.push(*block_output)
+      elsif block_output.is_a?(ResultOfRuleApplication)
+        @problems.push(*block_output.problems)
+      elsif !block_output
+        fail
+      end
+    end
   end
   
   class Declaration < AbstractDeclaration
@@ -112,6 +144,9 @@ module Pinker
       @failure_message == other.failure_message
     end
     
+    def with_new_failure_message(failure_message)
+      self.class.new(failure_message, &@block)
+    end
   end
   
   class Problem
