@@ -186,17 +186,13 @@ regarding "replicate json schema example in pinker" do
             ["tags", "array", Array, true]
           ].
             each do |property_name, json_schema_primitive_type, is_a_class_check, nil_allowed|
-            
-            failure_message = 'Value #{actual_object["'
-            failure_message << property_name
-            failure_message << '"]} for field \''
-            failure_message << property_name
-            failure_message << '\' is not of type ' + json_schema_primitive_type
-            
-            declare(failure_message) do 
+              
+            declare do |call|
               value = self[property_name]
-              value.is_a?(is_a_class_check) || nil_allowed && value.nil?
+              (value.is_a?(is_a_class_check) || nil_allowed && value.nil?) ||
+                call.fail("Value #{value} for field '#{property_name}' is not of type #{json_schema_primitive_type}")
             end
+            
           end
           
           declare('Value #{actual_object["price"]} for field \'price\' is less than minimum value: 0') do
