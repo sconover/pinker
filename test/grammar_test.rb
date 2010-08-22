@@ -72,7 +72,7 @@ regarding "a grammar is a set of rules" do
       
       assert{ 
         catch_raise{shirt_grammar_with_no_rules.apply_to(nil)}.message == 
-          "A Grammar must have at least one Rule.\n#{shirt_grammar_with_no_rules.inspect}"
+          "A Grammar must have at least one Rule."
       }
     end
     
