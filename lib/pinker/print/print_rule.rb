@@ -37,6 +37,5 @@ module Pinker
       "'" + @declaration.failure_message + "'" + ":" + @actual_object.inspect
     end
   end
-
   
 end

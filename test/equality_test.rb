@@ -21,7 +21,7 @@ regarding "prove value equality" do
     
   test "result of grammar application" do
     p1 = [Problem.new(Declaration.new("a"), "objectA")]
-    p2 = [Problem.new(Declaration.new("a"), "objectA"))
+    p2 = [Problem.new(Declaration.new("a"), "objectA")]
     pZZ = [Problem.new(Declaration.new("ZZ"), "objectZZ")]
 
     assert{ ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(p1) }
