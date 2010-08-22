@@ -84,7 +84,7 @@ regarding "a rule" do
       assert{ @red_rule.apply_to(Color.new("red")).problems.empty? }
       assert{ 
         @red_rule.apply_to(Color.new("blue")).problems == 
-          Problems.new.push(Problem.new(Declaration.new("Must be red."), Color.new("blue")))
+          [Problem.new(Declaration.new("Must be red."), Color.new("blue"))]
       }
     end
 
@@ -97,7 +97,8 @@ regarding "a rule" do
       
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
-                Problems.new.push(Problem.new(Declaration.new("Must be red."), Color.new("blue"))) }
+                [Problem.new(Declaration.new("Must be red."), Color.new("blue"))] 
+      }
     end
     
     test "no weird side effects of evaluation..." do
@@ -124,16 +125,18 @@ regarding "a rule" do
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
   
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
-                Problems.new.push(Problem.new(Declaration.new("Must be red."), Color.new("blue"))) }
+                [Problem.new(Declaration.new("Must be red."), Color.new("blue"))] 
+      }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
-                Problems.new.push(Problem.new(Declaration.new("Must be large."), 
-                                              Shirt.new("small", Color.new("red")))) }
+                [Problem.new(Declaration.new("Must be large."), 
+                             Shirt.new("small", Color.new("red")))] 
+      }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
-                Problems.new.push(
+                [
                   Problem.new(Declaration.new("Must be red."), Color.new("blue")),
                   Problem.new(Declaration.new("Must be large."), 
                                               Shirt.new("small", Color.new("blue")))
-                )
+                ]
       }
     end
 

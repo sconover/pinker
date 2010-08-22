@@ -19,7 +19,6 @@ module Pinker
     include ArrayPrintSupport
   end
 
-  
   class Declaration
     include PrintSupport
     
@@ -29,22 +28,4 @@ module Pinker
     end
   end
   
-  class RuleReference
-    include PrintSupport
-    
-    def to_s
-      "rule(#{@rule_key.inspect})"
-    end
-  end
-  
-  class RuleHolder
-    def inspect(indent="")
-      @rule.inspect(indent)
-    end
-    
-    def to_s
-      @rule.to_s
-    end
-  end
-
 end

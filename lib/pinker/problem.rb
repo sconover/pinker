@@ -1,7 +1,4 @@
 module Pinker
-  class Problems < Array
-  end
-
   module ProblemContext
     def problem(declaration, actual_object, options={})
       problem = Problem.new(declaration, actual_object, options)

@@ -109,9 +109,7 @@ module Pinker
     end
     
     def problems_with(object)
-      problems = Problems.new
-      problems.push(*collect{|rule|rule.apply_to(object).problems}.flatten)
-      problems
+      collect{|rule|rule.apply_to(object).problems}.flatten
     end
   end
 

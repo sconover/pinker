@@ -31,7 +31,8 @@ module Pinker
       if well_formed?
         indent + "Result:Well-Formed"
       else
-        indent + "Result:Not-Well-Formed:\n" + indent + "  " + @problems.inspect(indent + "  ")
+        problems.extend(ArrayPrintSupport)
+        indent + "Result:Not-Well-Formed:" + @problems.inspect(indent).lstrip
       end
     end
 
@@ -39,7 +40,7 @@ module Pinker
       if well_formed?
         "Result:Well-Formed"
       else
-        "Result:Not-Well-Formed:#{@problems.to_s}"
+        "Result:Not-Well-Formed:[#{@problems.collect{|p|p.to_s}.join(",")}]"
       end
     end
   end  

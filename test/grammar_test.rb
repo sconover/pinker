@@ -43,7 +43,7 @@ regarding "a grammar is a set of rules" do
       result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("red")))
       deny  { result.well_formed? }
       assert{ result.problems == 
-                Problems.new.push(Problem.new(Declaration.new("Size must be either large or small."), Shirt.new("tiny", Color.new("red"))))
+                [Problem.new(Declaration.new("Size must be either large or small."), Shirt.new("tiny", Color.new("red")))]
       }
     end
     

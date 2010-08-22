@@ -26,7 +26,7 @@ module Pinker
     end
     
     def apply_to(object, path=[])
-      problems = Problems.new
+      problems = []
       unless object.nil? || object.is_a?(name_or_class)
         problems.push(Problem.new(Declaration.new("Must be type #{name_or_class.name}"), object))
       end
@@ -59,11 +59,9 @@ module Pinker
 
   class Declarations < Array
     def problems_with(object, path, context)
-      problems = Problems.new
-      each do |declaration|
-        problems.push(*declaration.problems_with(object, path.dup, context))
-      end
-      problems
+      collect do |declaration|
+        declaration.problems_with(object, path.dup, context)
+      end.flatten
     end
     
     def evaluate_all(object)
@@ -85,12 +83,12 @@ module Pinker
 
       result = object.instance_eval(&@block)
       
-      if result.is_a?(Problems)
+      if result.is_a?(Array)
         result
       elsif result.is_a?(ResultOfRuleApplication)
         result.problems
       elsif !result
-        Problems.new.push(Problem.new(self, object))
+        [Problem.new(self, object)]
       else
         []
       end

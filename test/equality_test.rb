@@ -19,18 +19,10 @@ regarding "prove value equality" do
     deny  { Problem.new(Declaration.new("a"), "objectA") == Problem.new(Declaration.new("a"), "objectZZ") }
   end
     
-  test "problems" do
-    assert{ Problems.new.push(Problem.new(Declaration.new("a"), "objectA")) == 
-              Problems.new.push(Problem.new(Declaration.new("a"), "objectA")) }
-    
-    deny  { Problems.new.push(Problem.new(Declaration.new("a"), "objectA")) == 
-              Problems.new.push(Problem.new(Declaration.new("ZZZZ"), "objectZZZZZ")) }
-  end
-    
   test "result of grammar application" do
-    p1 = Problems.new.push(Problem.new(Declaration.new("a"), "objectA"))
-    p2 = Problems.new.push(Problem.new(Declaration.new("a"), "objectA"))
-    pZZ = Problems.new.push(Problem.new(Declaration.new("ZZ"), "objectZZ"))
+    p1 = [Problem.new(Declaration.new("a"), "objectA")]
+    p2 = [Problem.new(Declaration.new("a"), "objectA"))
+    pZZ = [Problem.new(Declaration.new("ZZ"), "objectZZ")]
 
     assert{ ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(p1) }
     
@@ -48,9 +40,9 @@ regarding "prove value equality" do
   end
 
   test "result of rule application" do
-    p1 = Problems.new.push(Problem.new(Declaration.new("a"), "objectA"))
-    p2 = Problems.new.push(Problem.new(Declaration.new("a"), "objectA"))
-    pZZ = Problems.new.push(Problem.new(Declaration.new("ZZ"), "objectZZ"))
+    p1 = [Problem.new(Declaration.new("a"), "objectA")]
+    p2 = [Problem.new(Declaration.new("a"), "objectA")]
+    pZZ = [Problem.new(Declaration.new("ZZ"), "objectZZ")]
 
     assert{ ResultOfRuleApplication.new(p1) == ResultOfRuleApplication.new(p1) }
     

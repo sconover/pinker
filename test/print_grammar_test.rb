@@ -58,37 +58,35 @@ end
 regarding "grammar result printing" do
   regarding "to_s" do
     it "passes" do
-      assert{ ResultOfGrammarApplication.new(Problems.new).to_s == "Result:Well-Formed"}
+      assert{ ResultOfGrammarApplication.new([]).to_s == "Result:Well-Formed"}
     end
 
     it "fails" do
-      assert{ ResultOfGrammarApplication.new(Problems.new.push(
+      assert{ ResultOfGrammarApplication.new([
                   Problem.new(Declaration.new("Must be red."), "blue"),
                   Problem.new(Declaration.new("Must be 9 ounces."), 8)
-                ){ 
-              }).to_s == 
-              %{Result:Not-Well-Formed:Problems['Must be red.':"blue",'Must be 9 ounces.':8]}
+                ]).to_s == 
+              %{Result:Not-Well-Formed:['Must be red.':"blue",'Must be 9 ounces.':8]}
       }
     end
   end
   
   regarding "inspect" do
     it "passes" do
-      assert{ ResultOfGrammarApplication.new(Problems.new).inspect == "Result:Well-Formed"}
+      assert{ ResultOfGrammarApplication.new([]).inspect == "Result:Well-Formed"}
     end    
     
     test "fails" do
-      assert{ ResultOfGrammarApplication.new(Problems.new.push(
+      assert{ ResultOfGrammarApplication.new([
                 Problem.new(Declaration.new("Must be red."), "blue"),
                 Problem.new(Declaration.new("Must be 9 ounces."), 8)
-              )).inspect == 
-%{Result:Not-Well-Formed:
-  Problems[
-    'Must be red.'
-      ==> "blue",
-    'Must be 9 ounces.'
-      ==> 8
-  ]} }
+              ]).inspect == 
+%{Result:Not-Well-Formed:[
+  'Must be red.'
+    ==> "blue",
+  'Must be 9 ounces.'
+    ==> 8
+]} }
     end
 
   end
