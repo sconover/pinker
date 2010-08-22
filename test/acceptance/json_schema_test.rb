@@ -17,12 +17,24 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Product must be an associative array" }
   end
   
-  it "fails if the required properties are missing" do
-    json = {}
-
-    #the ruby json schema library doesn't actually fail here
+  it "fails if the name is missing" do
+    json = good_json
+    json.delete("name")
+    
     assert{ json_schema_error(json).message == "Required field 'name' is missing" }
     assert{ grammar_error(json).message == "Required field 'name' is missing" }
+  end
+  
+  it "fails if the id is missing" do
+    json = good_json
+    json.delete("id")
+
+    assert{ json_schema_error(json).message == "Required field 'id' is missing" }
+    assert{ grammar_error(json).message == "Required field 'id' is missing" }
+  end
+  
+  def good_json
+    {"id" => 101, "name" => "Jane", "price" => 19.99, "tags" => ["hot", "onsale"]}
   end
   
   def grammar_error(json)
@@ -38,7 +50,9 @@ regarding "replicate json schema example in pinker" do
       Grammar.new(:json_schema_rfc_example) do
         rule(:product) do
           declare("Product must be an associative array"){is_a?(Hash)}
-          declare("Required field 'name' is missing"){key?("name")}
+          %w{id name}.each do |property_name|
+            declare("Required field '#{property_name}' is missing"){key?(property_name)}
+          end
         end
       end
   end
