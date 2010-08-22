@@ -3,17 +3,6 @@ require "./test/test_helper"
 require "pinker/rule"
 include Pinker
 
-
-  #error conditions:
-    #no predicate or rule supplied
-    #not a predicate or rule
-    #invalid finder
-    #...be helpful
-
-  #symbol (vs class)
-    #symbol plus class?
-
-
 regarding "a rule" do
 
   class Color
