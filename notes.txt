@@ -7,3 +7,6 @@ So then what's the value of pinker?  There's not much to it.  Is there in fact a
 - Instance-oriented.  Where a typical validation approach might assume a Class, Pinker is oriented around instances.  So you can validate that one Array or Hash.  Think duck-typing.
 
 You want to validate the *state* of an object.
+
+A simple goal is to get all the defensive coding and exception-throwing out of your classes.
+After a grammar check you should be able to trust that things are in the forms you expect them to be.

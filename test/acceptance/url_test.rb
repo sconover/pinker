@@ -35,7 +35,6 @@ regarding "a grammar for the structure of a url" do
               actual = query.split("&").collect{|pair|pair.split("=").first}
               bad = actual - allowed
             
-            
               query && bad==[] || call.fail("#{bad.join(", ")} are not allowed as query parameters.  Valid parameters are: #{allowed.join(", ")}.")
             end
           end
