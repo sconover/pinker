@@ -72,7 +72,7 @@ regarding "a rule" do
 
   end
 
-  regarding "apply_to is like apply_to but it gives more detail when things go wrong" do
+  regarding "detail when things go wrong" do
     
     test "apply_to / result satisfied?" do
       assert{ @red_rule.apply_to(Color.new("red")).satisfied? }
@@ -163,5 +163,30 @@ regarding "a rule" do
     
   end
 
+  regarding "best effort" do
+    test "don't swallow declare exceptions if nothing has failed yet" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare("Must be large."){@size=="large"}
+          declare{zzz == "blam"}
+        end
+        
+      assert{ catch_raise{shirt_rule.apply_to(Shirt.new("large", Color.new("red")))} != nil }
+    end
+    
+    test "swallow subsequent declare exceptions if a declare has failed already" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare("Must be large."){@size=="large"}
+          declare{zzz == "blam"}
+        end
+        
+      small_shirt = Shirt.new("small", Color.new("red"))
+      assert{ catch_raise{shirt_rule.apply_to(small_shirt)} == nil }
+      assert{ shirt_rule.apply_to(small_shirt).problems == [
+                Problem.new(Declaration.new("Must be large."), small_shirt)
+              ] }
+    end
 
+  end
 end

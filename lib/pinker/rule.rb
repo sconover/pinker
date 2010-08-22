@@ -30,8 +30,19 @@ module Pinker
         problems.push(Problem.new(Declaration.new("Must be type #{name_or_class.name}"), object, context={}))
       end
       
-      
-      problems.push(*@declarations.problems_with(object, context={}))
+      already_failed = false
+      @declarations.each do |declaration|
+        if already_failed
+          begin
+            problems.push(*declaration.problems_with(object, context={}))
+          rescue StandardError => e
+          end
+        else
+          current_problems = declaration.problems_with(object, context={})
+          problems.push(*current_problems)
+          already_failed = !current_problems.empty?
+        end
+      end
       
       ResultOfRuleApplication.new(problems)
     end
