@@ -49,7 +49,7 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json) == nil }
   end
   
-  test "no failure on superfluous fields" do
+  test "no failure on presence of extra fields" do
     json = good_json
     json["foo"] = 1
     json["bar"] = 2
@@ -72,6 +72,89 @@ regarding "replicate json schema example in pinker" do
     assert{ grammar_error(json).message == "Value abc for field 'id' is not of type number" }
   end
 
+  test "fails if name is not a string" do
+    json = good_json
+    
+    json["name"] = "Jane"
+    
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+
+    json["name"] = 101
+
+    assert{ json_schema_error(json).message == "Value 101 for field 'name' is not of type string" }
+    assert{ grammar_error(json).message == "Value 101 for field 'name' is not of type string" }
+  end
+
+  test "fails if the name is nil, because nil is not a string" do
+    json = good_json
+    json["name"] = nil
+    
+    assert{ json_schema_error(json).message == "Value  for field 'name' is not of type string" }
+    assert{ grammar_error(json).message == "Value  for field 'name' is not of type string" }
+  end
+  
+  test "fails if price is not a number" do
+    json = good_json
+    
+    json["price"] = 19.99
+    
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+
+    json["price"] = "ZZZ"
+
+    assert{ json_schema_error(json).message == "Value ZZZ for field 'price' is not of type number" }
+    assert{ grammar_error(json).message == "Value ZZZ for field 'price' is not of type number" }
+  end
+
+  test "fails if tags is not an array" do
+    json = good_json
+    
+    json["tags"] = ["hot", "onsale"]
+    
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+
+    json["tags"] = 101
+
+    assert{ json_schema_error(json).message == "Value 101 for field 'tags' is not of type array" }
+    assert{ grammar_error(json).message == "Value 101 for field 'tags' is not of type array" }
+  end
+  
+  test "fails if tags items are not all strings" do
+    json = good_json
+    
+    json["tags"] = ["hot", "onsale"]
+    
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+
+    json["tags"] = ["hot", 101]
+
+    assert{ json_schema_error(json).message == 
+              "Failed to validate field 'tags' list schema: Value 101 for field '_data' is not of type string" }
+    assert{ grammar_error(json).message == 
+              "Failed to validate field 'tags' list schema: Value 101 for field '_data' is not of type string" }
+  end
+  
+  test "price must be at least zero" do
+    json = good_json
+    
+    json["price"] = 19.99
+    
+    assert{ json_schema_error(json) == nil }
+    assert{ grammar_error(json) == nil }
+
+    json["price"] = -2.22
+
+    assert{ json_schema_error(json).message == 
+              "Value -2.22 for field 'price' is less than minimum value: 0" }
+    assert{ grammar_error(json).message == 
+              "Value -2.22 for field 'price' is less than minimum value: 0" }
+  end
+
+
   
   def good_json
     {"id" => 101, "name" => "Jane", "price" => 19.99, "tags" => ["hot", "onsale"]}
@@ -89,12 +172,45 @@ regarding "replicate json schema example in pinker" do
     @grammar ||=
       Grammar.new(:json_schema_rfc_example) do
         rule(:product) do
+          
           declare("Product must be an associative array"){is_a?(Hash)}
+          
           %w{id name price}.each do |property_name|
             declare("Required field '#{property_name}' is missing"){key?(property_name)}
           end
-          declare('Value #{actual_object["id"]} for field \'id\' is not of type number') do
-            self["id"].is_a?(Numeric)
+          
+          [
+            ["id", "number", Numeric, false], 
+            ["name", "string", String, false],
+            ["price", "number", Numeric, false],
+            ["tags", "array", Array, true]
+          ].
+            each do |property_name, json_schema_primitive_type, is_a_class_check, nil_allowed|
+            
+            failure_message = 'Value #{actual_object["'
+            failure_message << property_name
+            failure_message << '"]} for field \''
+            failure_message << property_name
+            failure_message << '\' is not of type ' + json_schema_primitive_type
+            
+            declare(failure_message) do 
+              value = self[property_name]
+              value.is_a?(is_a_class_check) || nil_allowed && value.nil?
+            end
+          end
+          
+          declare('Value #{actual_object["price"]} for field \'price\' is less than minimum value: 0') do
+            self["price"] >= 0.0
+          end
+          
+          with_rule(:string_tags) do |rule|
+            self["tags"] ? self["tags"].collect{|tag|rule.apply_to(tag).problems}.flatten : []
+          end
+        end
+        
+        rule(:string_tags) do
+          declare('Failed to validate field \'tags\' list schema: Value #{actual_object} for field \'_data\' is not of type string') do
+            self.is_a?(String)
           end
         end
       end
