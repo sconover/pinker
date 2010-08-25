@@ -79,6 +79,17 @@ regarding "a rule" do
       deny  { @red_rule.apply_to(Color.new("blue")).satisfied? }
     end
 
+    test "empty declare" do
+      red_rule =
+        Rule.new(Color) do
+          declare{@name=="red"}
+        end
+      
+      assert{ red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { red_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+
     test "show problems" do
       assert{ @red_rule.apply_to(Color.new("red")).problems.empty? }
       assert{ 
