@@ -161,11 +161,11 @@ regarding "replicate json schema example in pinker" do
   end
   
   def grammar_error(json)
-    catch_raise{grammar_equivalent.apply_to(json).well_formed!}
+    rescuing{grammar_equivalent.apply_to(json).well_formed!}
   end
   
   def json_schema_error(json)
-    catch_raise{JSON::Schema.validate(json, json_schema_rfc_example)}
+    rescuing{JSON::Schema.validate(json, json_schema_rfc_example)}
   end
   
   def grammar_equivalent

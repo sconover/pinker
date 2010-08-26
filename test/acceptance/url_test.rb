@@ -30,7 +30,7 @@ regarding "a grammar for the structure of a url" do
   end
   
   def grammar_error(url)
-    catch_raise{grammar.apply_to(URI::parse(url)).well_formed!}
+    rescuing{grammar.apply_to(URI::parse(url)).well_formed!}
   end
   
   def grammar

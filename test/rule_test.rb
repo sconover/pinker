@@ -197,7 +197,7 @@ regarding "a rule" do
           declare{zzz == "blam"}
         end
         
-      assert{ catch_raise{shirt_rule.apply_to(Shirt.new("large", Color.new("red")))} != nil }
+      assert{ rescuing{shirt_rule.apply_to(Shirt.new("large", Color.new("red")))} != nil }
     end
     
     test "swallow subsequent declare exceptions if a declare has failed already" do
@@ -208,7 +208,7 @@ regarding "a rule" do
         end
         
       small_shirt = Shirt.new("small", Color.new("red"))
-      assert{ catch_raise{shirt_rule.apply_to(small_shirt)} == nil }
+      assert{ rescuing{shirt_rule.apply_to(small_shirt)} == nil }
       assert{ shirt_rule.apply_to(small_shirt).problems == [
                 Problem.new(Declaration.new("Must be large."), small_shirt)
               ] }
