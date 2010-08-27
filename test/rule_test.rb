@@ -167,7 +167,6 @@ regarding "a rule" do
 
   end
 
-
   regarding "typing and nil" do
     
     class Shade < Color

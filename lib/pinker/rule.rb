@@ -31,20 +31,22 @@ module Pinker
       end
       
       already_failed = false
+      context = {}
+      memory = {}
       @declarations.each do |declaration|
         if already_failed
           begin
-            problems.push(*declaration.problems_with(object, context={}))
+            problems.push(*declaration.problems_with(object, context, memory))
           rescue StandardError => e
           end
         else
-          current_problems = declaration.problems_with(object, context={})
+          current_problems = declaration.problems_with(object, context, memory)
           problems.push(*current_problems)
           already_failed = !current_problems.empty?
         end
       end
       
-      ResultOfRuleApplication.new(problems)
+      ResultOfRuleApplication.new(problems, memory)
     end
     
     def ==(other)
@@ -56,10 +58,11 @@ module Pinker
   class ResultOfRuleApplication
     include ValueEquality
     
-    attr_reader :problems
+    attr_reader :problems, :memory
     
-    def initialize(problems)
+    def initialize(problems, memory)
       @problems = problems
+      @memory = memory
     end
     
     def satisfied?
@@ -68,9 +71,9 @@ module Pinker
   end
 
   class Declarations < Array
-    def problems_with(object, context)
+    def problems_with(object, context, memory)
       collect do |declaration|
-        declaration.problems_with(object, context)
+        declaration.problems_with(object, context, memory)
       end.flatten
     end
   end
@@ -81,25 +84,37 @@ module Pinker
       @declarations << declaration
       declaration
     end
+    
+    def remember(&block)
+      remembering = Remembering.new(&block)
+      @declarations << remembering
+      remembering
+    end
   end
   
   class AbstractDeclaration
-    def call(actual_object, block=@block)
+    def call(actual_object, context, block=@block)
       if block.arity<=0
-        call(actual_object, 
-          proc do |call|
+        call(actual_object, context,
+          proc do |call, context|
             call.result(self.instance_eval(&block))
           end
         )
       else
         call = DeclarationCall.new(self, actual_object)
-        actual_object.instance_exec(call, &block)
+        if block.arity==1
+          actual_object.instance_exec(call, &block)
+        elsif block.arity==2
+          actual_object.instance_exec(call, context, &block)
+        else
+          raise "invalid block arity"
+        end
         call
       end
     end
     
-    def problems_with(actual_object, context)
-      call(actual_object).problems
+    def problems_with(actual_object, context, memory)
+      call(actual_object, context).problems
     end 
   end
   
@@ -147,6 +162,22 @@ module Pinker
     def with_new_failure_message(failure_message)
       self.class.new(failure_message, &@block)
     end
+  end
+  
+  class Remembering    
+    def initialize(&block)
+      @block = block
+    end
+    
+    def problems_with(actual_object, context, memory)
+      if @block.arity == 1
+        actual_object.instance_exec(memory, &@block)
+      elsif @block.arity == 2
+        actual_object.instance_exec(memory, context, &@block)
+      else 
+        raise "invalid block arity"
+      end
+    end 
   end
   
   class Problem
