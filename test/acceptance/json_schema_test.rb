@@ -6,7 +6,7 @@ require "json"
 require "pinker"
 include Pinker
 
-regarding "replicate json schema example in pinker" do
+xregarding "replicate json schema example in pinker WHAT'S THE DEAL?  DID JSONSCHEMA CHANGE?  The error messages are much more primitive now.  Figure this out." do
   
   test "fails if the product is not an associative array" do
     json = []

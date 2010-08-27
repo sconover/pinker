@@ -18,7 +18,7 @@ regarding "remember helps gather up things that get returned if the rule is vali
         declare("Path must have at least three sections"){@path_info.split("/").length>=3}
         
         remember do |memory|
-          memory[:resource_type] = @path_info.split("/")[1]
+          memory[:resource_type] = @path_info.split("/")[2]
         end
       end
       
@@ -35,7 +35,7 @@ regarding "remember helps gather up things that get returned if the rule is vali
         end
         
         remember do |memory, context|
-          memory[:resource_type] = context[:path_parts][1]
+          memory[:resource_type] = context[:path_parts][2]
         end
       end
       

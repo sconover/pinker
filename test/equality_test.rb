@@ -39,14 +39,22 @@ regarding "prove value equality" do
               Rule.new(:ZZZ){declare("Must be red."){@color=="red"}} }
   end
 
-  test "result of rule application" do
+  test "result of rule application - problems differ" do
     p1 = [Problem.new(Declaration.new("a"), "objectA")]
     p2 = [Problem.new(Declaration.new("a"), "objectA")]
     pZZ = [Problem.new(Declaration.new("ZZ"), "objectZZ")]
-
-    assert{ ResultOfRuleApplication.new(p1) == ResultOfRuleApplication.new(p1) }
     
-    deny  { ResultOfRuleApplication.new(p1) == ResultOfRuleApplication.new(pZZ) }
+    assert{ ResultOfRuleApplication.new(p1, memory={}) == ResultOfRuleApplication.new(p1, memory={}) }
+    
+    deny  { ResultOfRuleApplication.new(p1, memory={}) == ResultOfRuleApplication.new(pZZ, memory={}) }
+  end
+
+  test "result of rule application - memories differ" do
+    p1 = [Problem.new(Declaration.new("a"), "objectA")]
+
+    assert{ ResultOfRuleApplication.new(p1, {:a => 1}) == ResultOfRuleApplication.new(p1, {:a => 1}) }
+    
+    deny  { ResultOfRuleApplication.new(p1, {:a => 1}) == ResultOfRuleApplication.new(p1, {:a => "ZZ"}) }
   end
 
   test "declaration" do
