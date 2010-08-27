@@ -10,6 +10,7 @@ require "wrong"
 require "wrong/adapters/minitest"
 require "wrong/message/test_context"
 require "wrong/message/string_diff"
+Wrong.config[:color] = true
 
 module Kernel
   alias_method :regarding, :describe

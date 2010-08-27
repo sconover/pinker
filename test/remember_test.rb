@@ -46,8 +46,35 @@ regarding "remember helps gather up things that get returned if the rule is vali
   
   
   test "if a remember fails and nothing else has, bubble up the error" do
+    rule =
+      Rule.new(Request) do
+        declare do |call, context|
+          (context[:path_parts]=@path_info.split("/")).length>=3 || call.fail("Path must have at least three sections")
+        end
+        
+        remember do |memory, context|
+          raise StandardError.new("blam!")
+        end
+      end    
+      
+    assert{ rescuing{ rule.apply_to(Request.new("/v1/widgets/foo")) }.message == 
+      "blam!"
+    }
   end
   
   test "if something else has already failed, swallow the exception.  this is a 'best effort'/completeness failure strategy." do
+    rule =
+      Rule.new(Request) do
+        declare do |call, context|
+          @path_info.split("/").length>=99 || call.fail("Path must have at least 99 sections")
+        end
+        
+        remember do |memory, context|
+          raise StandardError.new("blam!")
+        end
+      end    
+    
+    assert{ rescuing{ rule.apply_to(Request.new("/v1/widgets/foo")) }.nil? }
+    assert{ rule.apply_to(Request.new("/v1/widgets/foo")).problems.first.message == "Path must have at least 99 sections" }
   end
 end
