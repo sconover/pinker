@@ -118,17 +118,20 @@ module Pinker
     end
     
     def problems_with(actual_object, context, memory)
-      call(actual_object, context).problems
+      result = call(actual_object, context)
+      memory.merge!(result.memory)
+      result.problems
     end 
   end
   
   class DeclarationCall
-    attr_reader :problems
+    attr_reader :problems, :memory
     
     def initialize(declaration, actual_object)
       @declaration = declaration
       @actual_object = actual_object
       @problems = []
+      @memory = {}
     end
     
     def fail(failure_message=nil)
@@ -145,6 +148,7 @@ module Pinker
         @problems.push(*block_output)
       elsif block_output.is_a?(ResultOfRuleApplication)
         @problems.push(*block_output.problems)
+        @memory.merge!(block_output.memory)
       elsif !block_output
         fail
       end

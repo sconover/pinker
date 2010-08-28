@@ -1,6 +1,6 @@
 require "./test/test_helper"
 
-require "pinker/rule"
+require "pinker/grammar"
 include Pinker
 
 regarding "remember helps gather up things that get returned if the rule is valid." do
@@ -91,4 +91,21 @@ regarding "remember helps gather up things that get returned if the rule is vali
     assert{ rescuing{ rule.apply_to(Request.new("/v1/widgets/foo")) }.nil? }
     assert{ rule.apply_to(Request.new("/v1/widgets/foo")).problems.first.message == "Path must have at least 99 sections" }
   end
+  
+  test "merge together memory hashes from rules" do
+    grammar = 
+      Grammar.new(:foo) do
+        rule(:a) do
+          remember{|memory|memory[:a] = 1}
+          with_rule(:b){|rule|rule.apply_to("y")}
+        end
+
+        rule(:b) do
+          remember{|memory|memory[:b] = 2}
+        end
+      end
+      
+    assert{ grammar.apply_to("x").memory == {:a => 1, :b => 2} }
+  end    
+
 end

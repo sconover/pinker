@@ -84,8 +84,6 @@ regarding "a grammar is a set of rules" do
             with_rule(Color){|rule|rule.apply_to(@color)}
           end
         end
-    end
-    
-    
+    end 
   end
 end

@@ -33,7 +33,8 @@ module Pinker
     end
     
     def apply_to_without_self_validation(object)
-      ResultOfGrammarApplication.new(@rules.first.apply_to(object).problems)
+      first_rule_result = @rules.first.apply_to(object)
+      ResultOfGrammarApplication.new(first_rule_result.problems, first_rule_result.memory)
     end
     
     def grammar_grammar
@@ -55,10 +56,11 @@ module Pinker
   class ResultOfGrammarApplication
     include ValueEquality
     
-    attr_reader :problems
+    attr_reader :problems, :memory
     
-    def initialize(problems)
+    def initialize(problems, memory={})
       @problems = problems
+      @memory = memory
     end
     
     def well_formed?
