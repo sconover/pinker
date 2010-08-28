@@ -138,6 +138,19 @@ regarding "a rule" do
           [Problem.new(Declaration.new("Must be green."), Color.new("blue"))]
       }
     end
+
+    test "in the call form, if fail is not called we treat the return value of the block as the result of the declare" do
+      green_rule =
+        Rule.new(Color) do 
+          declare do |call|
+            @name=="green"
+          end
+        end
+
+      assert{ green_rule.apply_to(Color.new("green")).satisfied? }
+      deny  { green_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
     
     test "more complex rule" do
       red_rule = @red_rule #block scoping

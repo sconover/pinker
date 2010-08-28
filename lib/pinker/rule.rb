@@ -102,13 +102,17 @@ module Pinker
         )
       else
         call = DeclarationCall.new(self, actual_object)
+        result = true
         if block.arity==1
-          actual_object.instance_exec(call, &block)
+          result = actual_object.instance_exec(call, &block)
         elsif block.arity==2
-          actual_object.instance_exec(call, context, &block)
+          result = actual_object.instance_exec(call, context, &block)
         else
           raise "invalid block arity"
         end
+
+        call.fail if call.problems.empty? && !result
+        
         call
       end
     end
@@ -144,6 +148,8 @@ module Pinker
       elsif !block_output
         fail
       end
+      
+      block_output
     end
   end
   
