@@ -183,6 +183,8 @@ module Pinker
       else 
         raise "invalid block arity"
       end
+      
+      []
     end 
   end
   

@@ -27,6 +27,20 @@ regarding "remember helps gather up things that get returned if the rule is vali
     }
   end
   
+  test "disregard the results of remembers" do
+    rule =
+      Rule.new(Request) do
+        remember do |memory, context|
+          memory[:x] = "y"
+          nil #caused explosions at one time
+        end
+      end
+      
+    assert{ rule.apply_to(Request.new("/v1/widgets/foo")).memory == 
+      {:x => "y"} 
+    }
+  end
+  
   test "cache useful things across calls using context" do
     rule =
       Rule.new(Request) do
