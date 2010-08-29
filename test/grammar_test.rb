@@ -20,24 +20,25 @@ regarding "a grammar is a set of rules" do
     end
   end
 
+  before do
+    @shirt_grammar =
+      Grammar.new(Shirt) do
+        rule(Shirt) do
+          declare("Size must be either large or small."){%w{small large}.include?(@size)}
+          with_rule(Color){|rule|rule.apply_to(@color)}
+        end
+    
+        rule(Color) do
+          declare("Color must be either red or blue."){%w{red blue}.include?(@name)}
+        end
+      end    
+  end
+
+
   #error conditions:
     #refereced rule not defined
     #...be helpful
-  regarding "is an object well-formed according to the grammar" do
-    before do
-      @shirt_grammar =
-        Grammar.new(Shirt) do
-          rule(Shirt) do
-            declare("Size must be either large or small."){%w{small large}.include?(@size)}
-            with_rule(Color){|rule|rule.apply_to(@color)}
-          end
-      
-          rule(Color) do
-            declare("Color must be either red or blue."){%w{red blue}.include?(@name)}
-          end
-        end    
-    end
-    
+  regarding "is an object well-formed according to the grammar" do    
     test "not well-formed.  the shirt is tiny, but only large and small are allowed" do
       assert{ @shirt_grammar.is_a?(Grammar) }
       result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("red")))
@@ -55,6 +56,26 @@ regarding "a grammar is a set of rules" do
 
       deny  { @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("blue"))).well_formed? }
       deny  { @shirt_grammar.apply_to(Shirt.new("small", Color.new("green"))).well_formed? }
+    end
+  end
+  
+  regarding "invalid grammar error" do
+    test "the error message is from the first problem encountered" do
+      assert{ 
+        rescuing{@shirt_grammar.apply_to(Shirt.new("tiny", Color.new("green"))).well_formed!}.
+          message == "Size must be either large or small."
+      }
+    end
+    
+    test "all the problems are available on the error" do
+      assert{ 
+        rescuing{@shirt_grammar.apply_to(Shirt.new("tiny", Color.new("green"))).well_formed!}.
+          problems.collect{|p|p.message} == [
+            "Size must be either large or small.",
+            "Color must be either red or blue."
+          ]
+      }
+
     end
   end
   

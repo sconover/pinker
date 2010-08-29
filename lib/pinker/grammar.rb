@@ -51,7 +51,14 @@ module Pinker
     
   end
   
-  class InvalidGrammarError < StandardError; end
+  class InvalidGrammarError < StandardError
+    attr_reader :problems
+    
+    def initialize(message, problems)
+      super(message)
+      @problems = problems
+    end
+  end
   
   class ResultOfGrammarApplication
     include ValueEquality
@@ -69,7 +76,7 @@ module Pinker
     
     def well_formed!
       unless well_formed?
-        raise InvalidGrammarError.new(problems.first.message)
+        raise InvalidGrammarError.new(problems.first.message, problems)
       end
     end
 
