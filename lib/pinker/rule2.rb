@@ -27,15 +27,11 @@ module Pinker
     end
 
     def rule(rule_key, &block)
-      #???????
-      rule = self.class.new(rule_key).instance_eval(&block).create_rule
+      rule = self.class.new(rule_key).instance_eval(&block).build
       @rules[rule_key] = rule
-      # rule = Rule2.new(rule_key, :other_rules => @rules, &block)
-      # @rules[rule_key] = rule
-      # rule
     end
 
-    def create_rule
+    def build
       Rule2.new(@rule_key, @parts)
     end
   end

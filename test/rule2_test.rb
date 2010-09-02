@@ -30,7 +30,7 @@ regarding "a rule" do
     @red_rule = 
       RuleBuilder.new(Color) {
         declare("Must be red."){@name=="red"}
-      }.create_rule
+      }.build
   end
   
   regarding "basics - build a rule and apply_to it against an object" do
@@ -44,7 +44,7 @@ regarding "a rule" do
       blue_rule = 
         RuleBuilder.new(Color) {
           declare{@name=="blue"}
-        }.create_rule
+        }.build
 
       assert{ blue_rule.apply_to(Color.new("blue")).satisfied? }
       deny  { blue_rule.apply_to(Color.new("red")).satisfied? }
@@ -54,7 +54,7 @@ regarding "a rule" do
       green_rule = 
         RuleBuilder.new(Color) {
           declare{name_x=="greenx"}
-        }.create_rule
+        }.build
 
       assert{ green_rule.apply_to(Color.new("green")).satisfied? }
       deny  { green_rule.apply_to(Color.new("blue")).satisfied? }
@@ -64,13 +64,139 @@ regarding "a rule" do
       rule_with_symbol_name = 
         RuleBuilder.new(:color) {
           declare{@name=="red"}
-        }.create_rule
+        }.build
 
       assert{ rule_with_symbol_name.apply_to(Color.new("red")).satisfied? }
       deny  { rule_with_symbol_name.apply_to(Color.new("blue")).satisfied? }
     end
 
   end
+  
+  
+  regarding "detail when things go wrong" do
+    
+    test "apply_to / result satisfied?" do
+      assert{ @red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { @red_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+    test "empty declare" do
+      red_rule =
+        RuleBuilder.new(Color) {
+          declare{@name=="red"}
+        }.build
+      
+      assert{ red_rule.apply_to(Color.new("red")).satisfied? }
+      deny  { red_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+
+    test "show problems" do
+      assert{ @red_rule.apply_to(Color.new("red")).problems.empty? }
+      assert{ 
+        @red_rule.apply_to(Color.new("blue")).problems == 
+          [Problem.new(Declaration.new("Must be red."), Color.new("blue"))]
+      }
+    end
+
+    xtest "conform to another rule" do
+      red_rule = @red_rule #block scoping
+      shirt_rule =
+        RuleBuilder.new(Shirt) {
+          declare{red_rule.apply_to(@color)}
+        }.build
+      
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
+                [Problem.new(Declaration2.new("Must be red."), Color.new("blue"))] 
+      }
+    end
+    
+    test "no weird side effects of evaluation..." do
+      red_rule = @red_rule #block scoping
+      shirt_rule =
+        RuleBuilder.new(Shirt) {
+          declare{red_rule.apply_to(@color)}
+        }.build
+        
+      shirt = Shirt.new("large", Color.new("red"))
+      shirt_rule.apply_to(shirt)
+      
+      deny  { shirt.respond_to?(:declare) }
+    end
+    
+    test "optional declare form with call object" do
+      green_rule =
+        RuleBuilder.new(Color) {
+          declare { |call|
+            @name=="green" || call.fail("Must be green.")
+          }
+        }.build
+
+      assert{ green_rule.apply_to(Color.new("green")).problems.empty? }
+      assert{ 
+        green_rule.apply_to(Color.new("blue")).problems == 
+          [Problem.new(Declaration2.new("Must be green."), Color.new("blue"))]
+      }
+    end
+
+    test "provide details in the call that end up in the problem object" do
+      green_rule =
+        RuleBuilder.new(Color) {
+          declare { |call|
+            @name=="green" || call.fail("Must be green.", :was => @name, :should_be => "green")
+          }
+        }.build
+
+      assert{ 
+        green_rule.apply_to(Color.new("blue")).problems.first.details == 
+          {:was => "blue", :should_be => "green"}
+      }
+    end
+
+    test "in the call form, if fail is not called we treat the return value of the block as the result of the declare" do
+      green_rule =
+        RuleBuilder.new(Color) {
+          declare { |call|
+            @name=="green"
+          }
+        }.build
+
+      assert{ green_rule.apply_to(Color.new("green")).satisfied? }
+      deny  { green_rule.apply_to(Color.new("blue")).satisfied? }
+    end
+
+    
+    xtest "more complex rule" do
+      red_rule = @red_rule #block scoping
+      shirt_rule =
+        RuleBuilder.new(Shirt) {
+          declare{red_rule.apply_to(@color)}
+          declare("Must be large."){@size=="large"}
+        }.build
+
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
+  
+      assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
+                [Problem.new(Declaration2.new("Must be red."), Color.new("blue"))] 
+      }
+      assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
+                [Problem.new(Declaration2.new("Must be large."), 
+                             Shirt.new("small", Color.new("red")))] 
+      }
+      assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
+                [
+                  Problem.new(Declaration2.new("Must be red."), Color.new("blue")),
+                  Problem.new(Declaration2.new("Must be large."), 
+                                              Shirt.new("small", Color.new("blue")))
+                ]
+      }
+    end
+
+  end
+
+  
+  
 end
 
 regarding "result of rule application" do
