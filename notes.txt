@@ -1,3 +1,36 @@
+class GrammarBuilder
+  def rule(id)
+  end
+
+  def create_grammar
+  end
+end
+
+class RuleBuilder
+  def initialize(rule_id)
+  end
+
+  def declare(&block)
+  end
+
+  def remember(&block)
+  end
+
+  def create_rule
+  end
+end
+
+
+...reopen RuleBuilder
+
+...or change what kind of rule object the rule method returns
+
+Pinker should be telling you what your options are here.  How to accomplish additions and overriding, etc
+
+Subclassing is a really straightforward way to specialize and compartmentalize 
+
+=========================
+
 So then what's the value of pinker?  There's not much to it.  Is there in fact anything worthwhile there?
 
 ...well that's the nature of any useful validation library.  Validation is hard to pin down, it can be just about any kind of logic you can think up.  Pinker reflects that, I think.  It's (hopefully) humble and not "overspecified".

@@ -134,13 +134,13 @@ module Pinker
       @memory = {}
     end
     
-    def fail(failure_message=nil)
+    def fail(failure_message=nil, details={})
       declaration = 
         failure_message ? 
           @declaration.with_new_failure_message(failure_message) :
           @declaration
           
-      @problems.push(Problem.new(declaration, @actual_object, {}))
+      @problems.push(Problem.new(declaration, @actual_object, {}, details))
     end
     
     def result(block_output)
@@ -193,12 +193,13 @@ module Pinker
   end
   
   class Problem
-    attr_reader :declaration, :actual_object, :context
+    attr_reader :declaration, :actual_object, :context, :details
   
-    def initialize(declaration, actual_object, context={})
+    def initialize(declaration, actual_object, context={}, details={})
       @declaration = declaration
       @actual_object = actual_object
       @context = context
+      @details = details
     end
     
     def message

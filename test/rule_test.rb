@@ -1,6 +1,7 @@
 require "./test/test_helper"
 
 require "pinker/rule"
+require "pinker/rule2"
 include Pinker
 
 regarding "a rule" do
@@ -139,6 +140,20 @@ regarding "a rule" do
       }
     end
 
+    test "provide details in the call that end up in the problem object" do
+      green_rule =
+        Rule.new(Color) do 
+          declare do |call|
+            @name=="green" || call.fail("Must be green.", :was => @name, :should_be => "green")
+          end
+        end
+
+      assert{ 
+        green_rule.apply_to(Color.new("blue")).problems.first.details == 
+          {:was => "blue", :should_be => "green"}
+      }
+    end
+
     test "in the call form, if fail is not called we treat the return value of the block as the result of the declare" do
       green_rule =
         Rule.new(Color) do 
@@ -228,4 +243,42 @@ regarding "a rule" do
 
   end
 
+end
+
+
+
+# NEW ===============================
+
+
+
+
+regarding "result of rule application" do
+  test "merging with another result merges problems and memory" do
+    r1 = ResultOfRuleApplication2.new(
+           [Problem.new(Declaration.new("Must be red."), "blue")], 
+           {:a => 1}
+         )
+    r2 = ResultOfRuleApplication2.new(
+           [Problem.new(Declaration.new("Must be blue."), "green")], 
+           {:b => 2}
+         )
+    r3 = ResultOfRuleApplication2.new(
+           [Problem.new(Declaration.new("Must be orange."), "yellow")], 
+           {:a => 3}
+         )
+    
+    assert{ r1.merge!(r2).problems == [
+              Problem.new(Declaration.new("Must be red."), "blue"),
+              Problem.new(Declaration.new("Must be blue."), "green")
+            ] }
+
+    assert{ r1.merge!(r3).problems == [
+              Problem.new(Declaration.new("Must be red."), "blue"),
+              Problem.new(Declaration.new("Must be blue."), "green"),
+              Problem.new(Declaration.new("Must be orange."), "yellow")
+            ] }
+
+    assert{ r1.merge!(r3).memory == {:a => 3, :b => 2} }
+  end
+  
 end
