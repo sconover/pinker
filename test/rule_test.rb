@@ -1,7 +1,6 @@
 require "./test/test_helper"
 
 require "pinker/rule"
-require "pinker/rule2"
 include Pinker
 
 regarding "a rule" do
@@ -243,42 +242,4 @@ regarding "a rule" do
 
   end
 
-end
-
-
-
-# NEW ===============================
-
-
-
-
-regarding "result of rule application" do
-  test "merging with another result merges problems and memory" do
-    r1 = ResultOfRuleApplication2.new(
-           [Problem.new(Declaration.new("Must be red."), "blue")], 
-           {:a => 1}
-         )
-    r2 = ResultOfRuleApplication2.new(
-           [Problem.new(Declaration.new("Must be blue."), "green")], 
-           {:b => 2}
-         )
-    r3 = ResultOfRuleApplication2.new(
-           [Problem.new(Declaration.new("Must be orange."), "yellow")], 
-           {:a => 3}
-         )
-    
-    assert{ r1.merge!(r2).problems == [
-              Problem.new(Declaration.new("Must be red."), "blue"),
-              Problem.new(Declaration.new("Must be blue."), "green")
-            ] }
-
-    assert{ r1.merge!(r3).problems == [
-              Problem.new(Declaration.new("Must be red."), "blue"),
-              Problem.new(Declaration.new("Must be blue."), "green"),
-              Problem.new(Declaration.new("Must be orange."), "yellow")
-            ] }
-
-    assert{ r1.merge!(r3).memory == {:a => 3, :b => 2} }
-  end
-  
 end

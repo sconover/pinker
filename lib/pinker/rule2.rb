@@ -2,14 +2,16 @@ require "pinker/rule"
 
 module Pinker
   class RuleBuilder
-    def initialize(rule_key)
+    def initialize(rule_key, &block)
       @rule_key = rule_key
-      @parts = parts
+      @parts = []
       @rules = {}
+      
+      instance_eval(&block) if block
     end
     
     def declare(failure_message=nil, &block)
-      @parts << Declaration.new(failure_message, &block)
+      @parts << Declaration2.new(failure_message, &block)
     end
 
     def remember(&block)
@@ -53,7 +55,30 @@ module Pinker
       result
     end
   end
+  
+  class Declaration2 < AbstractDeclaration
+    attr_reader :failure_message
+    
+    def initialize(failure_message=nil, &block)
+      @failure_message = failure_message
+      @block = block
+    end
+        
+    def ==(other)
+      @failure_message == other.failure_message
+    end
+    
+    def with_new_failure_message(failure_message)
+      self.class.new(failure_message, &@block)
+    end
+    
+    def apply_to(actual_object)
+      old_result = call(actual_object, context={})
+      ResultOfRuleApplication2.new(old_result.problems, old_result.memory)
+    end
+  end
 
+  
   class RuleDeclaration2 < AbstractDeclaration
     attr_reader :rule_key
     
