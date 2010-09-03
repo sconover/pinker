@@ -2,10 +2,11 @@ require "pinker/rule"
 
 module Pinker
   class RuleBuilder
-    def initialize(rule_key, &block)
+    def initialize(rule_key, all_rules={}, &block)
       @rule_key = rule_key
       @parts = []
-      @rules = {}
+      @all_rules = all_rules
+      @rule_list = []
       
       instance_eval(&block) if block
     end
@@ -19,16 +20,18 @@ module Pinker
     end    
 
     def with_rule(rule_key, &block)
-      @parts << RuleDeclaration2.new(rule_key, @rules, &block)
+      @parts << RuleDeclaration2.new(rule_key, @all_rules, &block)
     end
 
     def rule(rule_key, &block)
-      rule = self.class.new(rule_key).instance_eval(&block).build
-      @rules[rule_key] = rule
+      rule = self.class.new(rule_key, @all_rules, &block).build
+      @all_rules[rule_key] = rule
+      @rule_list << rule
+      self
     end
 
     def build
-      Rule2.new(@rule_key, @parts)
+      @parts.empty? && !@rule_list.empty? ? @rule_list.first : Rule2.new(@rule_key, @parts)
     end
   end
   
@@ -41,7 +44,7 @@ module Pinker
     def apply_to(object)
       result = ResultOfRuleApplication2.new
       
-      validate_type(object, result) if @rule_key.is_a?(Class)
+      check_type(object, result) if @rule_key.is_a?(Class)
       
       @parts.each do |part|
         if result.satisfied?
@@ -57,7 +60,7 @@ module Pinker
     end
     
     private
-    def validate_type(object, result)
+    def check_type(object, result)
       klass = @rule_key
       unless object.nil? || !klass.is_a?(Class) || object.is_a?(klass)
         result.problems << Problem.new(Declaration.new("Must be type #{klass.name}"), object, context={}) 
@@ -65,7 +68,19 @@ module Pinker
     end
   end
   
-  class Declaration2 < AbstractDeclaration
+  class AbstractDeclaration2
+    def _handle_result(result, actual_object)
+      if result.is_a?(ResultOfRuleApplication2)
+        result
+      elsif result
+        ResultOfRuleApplication2.new([], {})
+      else
+        ResultOfRuleApplication2.new([Problem.new(self, actual_object)], {})
+      end
+    end
+  end
+  
+  class Declaration2 < AbstractDeclaration2
     attr_reader :failure_message
     
     def initialize(failure_message=nil, &block)
@@ -99,13 +114,7 @@ module Pinker
           raise "invalid arity" #use a grammar for this?
         end
       
-      if result.is_a?(ResultOfRuleApplication2)
-        result
-      elsif result
-        ResultOfRuleApplication2.new([], {})
-      else
-        ResultOfRuleApplication2.new([Problem.new(self, actual_object)], {})
-      end
+      _handle_result(result, actual_object)
     end
   end
 
@@ -136,7 +145,7 @@ module Pinker
   end
 
   
-  class RuleDeclaration2
+  class RuleDeclaration2 < AbstractDeclaration2
     attr_reader :rule_key
     
     def initialize(rule_key, all_rules, &block)
@@ -146,8 +155,7 @@ module Pinker
     end
     
     def apply_to(actual_object)
-      raise "boom"
-      actual_object.instance_exec(@all_rules[@rule_key], &block)
+      _handle_result(actual_object.instance_exec(@all_rules[@rule_key], &@block), actual_object)
     end
     
     def ==(other)
@@ -169,6 +177,12 @@ module Pinker
       @problems.empty?
     end
     
+    def satisfied!
+      unless satisfied?
+        raise RuleViolationError.new(@problems.first.message, @problems)
+      end
+    end
+    
     def merge!(other)
       @problems += other.problems
       @memory.merge!(other.memory)
@@ -176,4 +190,14 @@ module Pinker
       self
     end
   end
+  
+  class RuleViolationError < StandardError
+    attr_reader :problems
+    
+    def initialize(message, problems)
+      super(message)
+      @problems = problems
+    end
+  end
+
 end
