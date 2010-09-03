@@ -33,18 +33,35 @@ module Pinker
   end
   
   class Rule2
-    def initialize(id, parts=[])
-      @id = id
+    def initialize(rule_key, parts=[])
+      @rule_key = rule_key
       @parts = parts
     end
 
     def apply_to(object)
       result = ResultOfRuleApplication2.new
-      problems = []
+      
+      validate_type(object, result) if @rule_key.is_a?(Class)
+      
       @parts.each do |part|
-        result.merge!(part.apply_to(object))
+        if result.satisfied?
+          result.merge!(part.apply_to(object))
+        else
+          begin
+            result.merge!(part.apply_to(object))
+          rescue StandardError => intentionally_swallow_because_of_best_effort
+          end  
+        end
       end
       result
+    end
+    
+    private
+    def validate_type(object, result)
+      klass = @rule_key
+      unless object.nil? || !klass.is_a?(Class) || object.is_a?(klass)
+        result.problems << Problem.new(Declaration.new("Must be type #{klass.name}"), object, context={}) 
+      end
     end
   end
   
