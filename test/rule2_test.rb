@@ -99,7 +99,7 @@ regarding "a rule" do
       }
     end
 
-    xtest "conform to another rule" do
+    test "conform to another rule" do
       red_rule = @red_rule #block scoping
       shirt_rule =
         RuleBuilder.new(Shirt) {
@@ -167,7 +167,7 @@ regarding "a rule" do
     end
 
     
-    xtest "more complex rule" do
+    test "more complex rule" do
       red_rule = @red_rule #block scoping
       shirt_rule =
         RuleBuilder.new(Shirt) {

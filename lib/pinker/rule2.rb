@@ -19,11 +19,7 @@ module Pinker
     end    
 
     def with_rule(rule_key, &block)
-      rules = @rules
-      @parts << 
-        RuleDeclaration2.new(rule_key) do 
-          self.instance_exec(rules[rule_key], &block)
-        end
+      @parts << RuleDeclaration2.new(rule_key, @rules, &block)
     end
 
     def rule(rule_key, &block)
@@ -69,18 +65,72 @@ module Pinker
     end
     
     def apply_to(actual_object)
-      old_result = call(actual_object, context={})
-      ResultOfRuleApplication2.new(old_result.problems, old_result.memory)
+      call = DeclarationCall2.new(self, actual_object)
+      
+      result = 
+        if @block.arity<=0
+          actual_object.instance_eval(&@block)
+        elsif @block.arity==1
+          result_from_block = actual_object.instance_exec(call, &@block)
+          
+          if call.failed?
+            call.result
+          else
+            result_from_block  
+          end
+        else
+          raise "invalid arity" #use a grammar for this?
+        end
+      
+      if result.is_a?(ResultOfRuleApplication2)
+        result
+      elsif result
+        ResultOfRuleApplication2.new([], {})
+      else
+        ResultOfRuleApplication2.new([Problem.new(self, actual_object)], {})
+      end
     end
   end
 
   
-  class RuleDeclaration2 < AbstractDeclaration
+  class DeclarationCall2
+    attr_reader :result
+    
+    def initialize(declaration, actual_object)
+      @declaration = declaration
+      @actual_object = actual_object
+      @result = ResultOfRuleApplication2.new([], {})
+      @failed = false
+    end
+    
+    def fail(failure_message=nil, details={})
+      declaration = 
+        failure_message ? 
+          @declaration.with_new_failure_message(failure_message) :
+          @declaration
+          
+      @failed = true
+      @result.problems << Problem.new(declaration, @actual_object, {}, details)
+    end
+    
+    def failed?
+      @failed
+    end
+  end
+
+  
+  class RuleDeclaration2
     attr_reader :rule_key
     
-    def initialize(rule_key, &block)
+    def initialize(rule_key, all_rules, &block)
       @rule_key = rule_key
+      @all_rules = all_rules
       @block = block
+    end
+    
+    def apply_to(actual_object)
+      raise "boom"
+      actual_object.instance_exec(@all_rules[@rule_key], &block)
     end
     
     def ==(other)
