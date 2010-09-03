@@ -1,12 +1,18 @@
 require "pinker/rule"
 
 module Pinker
+  
+  #grammar grammar:
+    #block arity
+    #intermingling of declares and rules.
+      #what about warnings?
+  
   class RuleBuilder
     def initialize(rule_key, all_rules={}, &block)
       @rule_key = rule_key
       @parts = []
       @all_rules = all_rules
-      @rule_list = []
+      @local_rule_list = []
       
       instance_eval(&block) if block
     end
@@ -16,7 +22,7 @@ module Pinker
     end
 
     def remember(&block)
-      @parts << Remembering.new(&block)
+      @parts << Remembering2.new(&block)
     end    
 
     def with_rule(rule_key, &block)
@@ -26,12 +32,14 @@ module Pinker
     def rule(rule_key, &block)
       rule = self.class.new(rule_key, @all_rules, &block).build
       @all_rules[rule_key] = rule
-      @rule_list << rule
+      @local_rule_list << rule
       self
     end
 
     def build
-      @parts.empty? && !@rule_list.empty? ? @rule_list.first : Rule2.new(@rule_key, @parts)
+      @parts.empty? && !@local_rule_list.empty? ? 
+        @local_rule_list.first : 
+        Rule2.new(@rule_key, @parts)
     end
   end
   
@@ -41,17 +49,17 @@ module Pinker
       @parts = parts
     end
 
-    def apply_to(object)
+    def apply_to(object, context={})
       result = ResultOfRuleApplication2.new
       
       check_type(object, result) if @rule_key.is_a?(Class)
       
       @parts.each do |part|
         if result.satisfied?
-          result.merge!(part.apply_to(object))
+          result.merge!(part.apply_to(object, context))
         else
           begin
-            result.merge!(part.apply_to(object))
+            result.merge!(part.apply_to(object, context))
           rescue StandardError => intentionally_swallow_because_of_best_effort
           end  
         end
@@ -96,7 +104,7 @@ module Pinker
       self.class.new(failure_message, &@block)
     end
     
-    def apply_to(actual_object)
+    def apply_to(actual_object, context={})
       call = DeclarationCall2.new(self, actual_object)
       
       result = 
@@ -154,7 +162,7 @@ module Pinker
       @block = block
     end
     
-    def apply_to(actual_object)
+    def apply_to(actual_object, context={})
       _handle_result(actual_object.instance_exec(@all_rules[@rule_key], &@block), actual_object)
     end
     
@@ -162,6 +170,31 @@ module Pinker
       @rule_key == other.rule_key
     end
   end
+
+  class Remembering2
+    def initialize(&block)
+      @block = block
+    end
+    
+    def apply_to(actual_object, context={})
+      memory = {}
+      actual_object.instance_exec(memory, &@block)
+      ResultOfRuleApplication2.new(problems=[], memory)
+    end
+    
+    # def problems_with(actual_object, context, memory)
+    #   if @block.arity == 1
+    #     actual_object.instance_exec(memory, &@block)
+    #   elsif @block.arity == 2
+    #     actual_object.instance_exec(memory, context, &@block)
+    #   else 
+    #     raise "invalid block arity"
+    #   end
+    #   
+    #   []
+    # end 
+  end
+
 
   class ResultOfRuleApplication2
     include ValueEquality
