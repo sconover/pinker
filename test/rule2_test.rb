@@ -195,7 +195,54 @@ regarding "a rule" do
 
   end
 
-  
+    regarding "typing and nil" do
+    
+    class Shade < Color
+    end
+    
+    test "failure if object type is not the same as the type known to the rule" do
+      empty_rule = Rule.new(Color)
+      assert{ empty_rule.apply_to(Color.new("zzz")).satisfied? }
+      assert{ empty_rule.apply_to(Shade.new("zzz")).satisfied? }
+      deny  { empty_rule.apply_to("zzz").satisfied? }
+    end
+    
+    test "but a rule allowing nil should work" do
+      weird_rule = Rule.new(Color) {declare{@name.nil? || !@name.nil?}}
+      assert{ weird_rule.apply_to(Color.new("zzz")).satisfied? }
+      assert{ weird_rule.apply_to(nil).satisfied? }
+      deny  { weird_rule.apply_to("zzz").satisfied? }
+    end
+    
+  end
+
+  regarding "best effort" do
+    test "don't swallow declare exceptions if nothing has failed yet" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare("Must be large."){@size=="large"}
+          declare{zzz == "blam"}
+        end
+        
+      assert{ rescuing{shirt_rule.apply_to(Shirt.new("large", Color.new("red")))} != nil }
+    end
+    
+    test "swallow subsequent declare exceptions if a declare has failed already" do
+      shirt_rule =
+        Rule.new(Shirt) do
+          declare("Must be large."){@size=="large"}
+          declare{zzz == "blam"}
+        end
+        
+      small_shirt = Shirt.new("small", Color.new("red"))
+      assert{ rescuing{shirt_rule.apply_to(small_shirt)} == nil }
+      assert{ shirt_rule.apply_to(small_shirt).problems == [
+                Problem.new(Declaration.new("Must be large."), small_shirt)
+              ] }
+    end
+
+  end
+
   
 end
 
