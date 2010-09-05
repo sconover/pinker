@@ -104,6 +104,9 @@ module Pinker
       self.class.new(failure_message, &@block)
     end
     
+    
+    #not elegant.  RF.
+    
     def apply_to(actual_object, context={})
       call = DeclarationCall2.new(self, actual_object)
       
@@ -112,17 +115,24 @@ module Pinker
           actual_object.instance_eval(&@block)
         elsif @block.arity==1
           result_from_block = actual_object.instance_exec(call, &@block)
-          
-          if call.failed?
-            call.result
-          else
-            result_from_block  
-          end
+          handle_call_and_result(call, result_from_block)
+        elsif @block.arity==2
+          result_from_block = actual_object.instance_exec(call, context, &@block)
+          handle_call_and_result(call, result_from_block)
         else
           raise "invalid arity" #use a grammar for this?
         end
       
       _handle_result(result, actual_object)
+    end
+    
+    private
+    def handle_call_and_result(call, result_from_block)
+      if call.failed?
+        call.result
+      else
+        result_from_block  
+      end
     end
   end
 
@@ -178,21 +188,16 @@ module Pinker
     
     def apply_to(actual_object, context={})
       memory = {}
-      actual_object.instance_exec(memory, &@block)
+      
+      if @block.arity == 1
+        actual_object.instance_exec(memory, &@block)
+      elsif @block.arity == 2
+        actual_object.instance_exec(memory, context, &@block)
+      else
+        raise "invalid arity"
+      end
       ResultOfRuleApplication2.new(problems=[], memory)
-    end
-    
-    # def problems_with(actual_object, context, memory)
-    #   if @block.arity == 1
-    #     actual_object.instance_exec(memory, &@block)
-    #   elsif @block.arity == 2
-    #     actual_object.instance_exec(memory, context, &@block)
-    #   else 
-    #     raise "invalid block arity"
-    #   end
-    #   
-    #   []
-    # end 
+    end    
   end
 
 
