@@ -8,7 +8,7 @@ module Pinker
           DeclareList::LIST_RESULTS_RULE.apply_to(list_results).satisfied!
         
           allowed = list_results[:allowed]
-          actual = list_results[:actual]
+          actual = Array(list_results[:actual])
           
           not_allowed = (actual - allowed)
           

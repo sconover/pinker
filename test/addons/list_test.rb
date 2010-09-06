@@ -38,7 +38,17 @@ regarding "check that the supplied values are contained in a list of possible va
     assert{ problem_details[:allowed] == %w{red green blue} }  
     assert{ problem_details[:not_allowed] == %w{yellow} }  
   end
-  
+
+  test "single value is surrounded with array" do
+    assert{ @color_rule.apply_to("blue").satisfied? }
+    deny  { @color_rule.apply_to("yellow").satisfied? }  
+
+    problem_details = @color_rule.apply_to("yellow").problems.first.details
+    assert{ problem_details[:actual] == %w{yellow} }  
+    assert{ problem_details[:allowed] == %w{red green blue} }  
+    assert{ problem_details[:not_allowed] == %w{yellow} }      
+  end
+    
   test "default failure message" do
     assert{ rescuing{@color_rule.apply_to(%w{yellow}).satisfied!}.
               message == "'yellow' is not allowed.  Valid values are 'red', 'green' and 'blue'." }  
