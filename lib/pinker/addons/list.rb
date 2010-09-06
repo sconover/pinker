@@ -24,7 +24,8 @@ module Pinker
                 "."
               end
               
-            call.fail(failure_message_proc.call(not_allowed, allowed))
+            call.fail(failure_message_proc.call(not_allowed, allowed),
+                      {:actual => actual, :allowed => allowed, :not_allowed => not_allowed})
           end
         }
       end

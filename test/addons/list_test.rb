@@ -27,6 +27,18 @@ regarding "check that the supplied values are contained in a list of possible va
     deny  { @color_rule.apply_to(%w{blue yellow}).satisfied? }  
   end
   
+  test "allowed, actual, and not allowed lists are details within the problem" do
+    problem_details = @color_rule.apply_to(%w{yellow}).problems.first.details
+    assert{ problem_details[:actual] == %w{yellow} }  
+    assert{ problem_details[:allowed] == %w{red green blue} }  
+    assert{ problem_details[:not_allowed] == %w{yellow} }  
+
+    problem_details = @color_rule.apply_to(%w{yellow blue}).problems.first.details
+    assert{ problem_details[:actual] == %w{yellow blue} }  
+    assert{ problem_details[:allowed] == %w{red green blue} }  
+    assert{ problem_details[:not_allowed] == %w{yellow} }  
+  end
+  
   test "default failure message" do
     assert{ rescuing{@color_rule.apply_to(%w{yellow}).satisfied!}.
               message == "'yellow' is not allowed.  Valid values are 'red', 'green' and 'blue'." }  
