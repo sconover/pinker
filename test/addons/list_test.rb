@@ -27,6 +27,35 @@ regarding "check that the supplied values are contained in a list of possible va
     deny  { @color_rule.apply_to(%w{blue yellow}).satisfied? }  
   end
   
+  test "default failure message" do
+    assert{ rescuing{@color_rule.apply_to(%w{yellow}).satisfied!}.
+              message == "'yellow' is not allowed.  Valid values are 'red', 'green' and 'blue'." }  
+    
+    assert{ rescuing{@color_rule.apply_to(%w{111}).satisfied!}.
+              message == "'111' is not allowed.  Valid values are 'red', 'green' and 'blue'." }  
+    
+    assert{ rescuing{@color_rule.apply_to(%w{yellow blue}).satisfied!}.
+              message == "'yellow' is not allowed.  Valid values are 'red', 'green' and 'blue'." }  
+
+    assert{ rescuing{@color_rule.apply_to(%w{yellow blue orange pink}).satisfied!}.
+              message == "'yellow', 'orange' and 'pink' are not allowed.  Valid values are 'red', 'green' and 'blue'." }  
+  end
+  
+  test "custom failure message" do
+    my_color_rule =
+      RuleBuilder.new(:colors) {
+        declare_list(proc{|not_allowed, allowed|
+                       "not allowed: " + not_allowed.join(",") + " allowed: " + allowed.join(",")
+                     }){
+          {:allowed => %w{red green blue}, :actual => self}
+        }
+      }.build
+
+
+    assert{ rescuing{my_color_rule.apply_to(%w{yellow}).satisfied!}.
+              message == "not allowed: yellow allowed: red,green,blue" }  
+  end
+  
   regarding "bad declare_list situations" do
   
     test "blows up if the results aren't in the expected format" do
