@@ -1,33 +1,16 @@
-class GrammarBuilder
-  def rule(id)
-  end
+There's not much to pinker.  It allows you to organize a certain kind of code.
 
-  def create_grammar
-  end
-end
+It extracts an aspect from your class - validation logic, sanity checking, policing code - puts a certain amount of structure around it.  If you have a lot of this kind of code, Pinker allows you to separate concerns.
 
-class RuleBuilder
-  def initialize(rule_id)
-  end
+Validation logic vs sanity checking / policing.
+Gray areas...there are not bright lines between them.
+But making the distinction can be useful...
+  - stuff you want active at design time vs run time
+  ...put another way - stuff intended for your eyes vs users' eyes
 
-  def declare(&block)
-  end
-
-  def remember(&block)
-  end
-
-  def create_rule
-  end
-end
-
-
-...reopen RuleBuilder
-
-...or change what kind of rule object the rule method returns
-
-Pinker should be telling you what your options are here.  How to accomplish additions and overriding, etc
-
-Subclassing is a really straightforward way to specialize and compartmentalize 
+You want to be able to turn either of these on or off independently
+  - sanity on/off: test/dev mode vs production
+  - validation on/off: code used w/ real users vs same code reused in a trusted setting like import.
 
 =========================
 
