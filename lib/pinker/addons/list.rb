@@ -1,5 +1,5 @@
 module Pinker
-  module RuleBuilderAdditions
+  module RuleBuilderAddons
     module DeclareList
       def declare_list(failure_message=nil, &block)
         declare(failure_message) {

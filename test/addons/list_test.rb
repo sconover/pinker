@@ -1,13 +1,13 @@
 require "./test/test_helper"
 
 require "pinker/rule"
-require "pinker/additions/list"
+require "pinker/addons/list"
 include Pinker
 
 regarding "check that the supplied values are contained in a list of possible values" do
   
   class RuleBuilder
-    include RuleBuilderAdditions::DeclareList
+    include RuleBuilderAddons::DeclareList
   end
   
   before do
