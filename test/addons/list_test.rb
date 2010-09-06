@@ -78,6 +78,16 @@ regarding "check that the supplied values are contained in a list of possible va
               message == "not allowed: yellow allowed: red,green,blue" }  
   end
   
+  test "actual is self by default" do
+    my_color_rule =
+      RuleBuilder.new(:colors) {
+        declare_list{{:allowed => %w{red green blue}}}
+      }.build
+
+    assert{ my_color_rule.apply_to(%w{blue}).satisfied? }
+    deny  { my_color_rule.apply_to(%w{yellow}).satisfied? }
+  end
+  
   regarding "bad declare_list situations" do
   
     test "blows up if the results aren't in the expected format" do

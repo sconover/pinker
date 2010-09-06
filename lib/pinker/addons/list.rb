@@ -4,7 +4,8 @@ module Pinker
       def declare_list(failure_message_proc=nil, &block)
         declare(failure_message_proc) { |call|
           list_results = self.instance_eval(&block)
-
+          list_results[:actual] ||= self
+          
           DeclareList::LIST_RESULTS_RULE.apply_to(list_results).satisfied!
         
           allowed = list_results[:allowed]
