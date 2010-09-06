@@ -17,16 +17,20 @@ module Pinker
       instance_eval(&block) if block
     end
     
+    def <<(part)
+      @parts << part
+    end
+    
     def declare(failure_message=nil, &block)
-      @parts << Declaration.new(failure_message, &block)
+      self << Declaration.new(failure_message, &block)
     end
 
     def remember(&block)
-      @parts << Remembering.new(&block)
+      self << Remembering.new(&block)
     end    
 
     def with_rule(rule_key, &block)
-      @parts << RuleDeclaration.new(rule_key, @all_rules, &block)
+      self << RuleDeclaration.new(rule_key, @all_rules, &block)
     end
 
     def rule(rule_key, &block)
