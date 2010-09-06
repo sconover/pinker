@@ -275,4 +275,4 @@ module Pinker
 
 end
 
-require "pinker/print/print_rule2"
+require "pinker/print/print_rule"

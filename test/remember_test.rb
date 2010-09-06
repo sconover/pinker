@@ -1,6 +1,6 @@
 require "./test/test_helper"
 
-require "pinker/rule2"
+require "pinker/rule"
 include Pinker
 
 regarding "remember helps gather up things that get returned if the rule is valid." do

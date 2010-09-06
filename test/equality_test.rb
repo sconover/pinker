@@ -1,6 +1,6 @@
 require "./test/test_helper"
 
-require "pinker/rule2"
+require "pinker/rule"
 include Pinker
 
 regarding "prove value equality" do
