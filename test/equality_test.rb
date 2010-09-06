@@ -1,17 +1,10 @@
 require "./test/test_helper"
 
-require "pinker/grammar"
+require "pinker/rule2"
 include Pinker
 
 regarding "prove value equality" do
 
-  test "grammar" do
-    assert{ Grammar.new(:A){rule(:a){}} == Grammar.new(:A){rule(:a){}} }
-
-    deny  { Grammar.new(:A){rule(:a){}} == Grammar.new(:ZZZ){rule(:a){}} }
-    deny  { Grammar.new(:A){rule(:a){}} == Grammar.new(:A){rule(:ZZZ){}} }
-  end
-    
   test "problem" do
     assert{ Problem.new(Declaration.new("a"), "objectA") == Problem.new(Declaration.new("a"), "objectA") }
     
@@ -19,24 +12,14 @@ regarding "prove value equality" do
     deny  { Problem.new(Declaration.new("a"), "objectA") == Problem.new(Declaration.new("a"), "objectZZ") }
   end
     
-  test "result of grammar application" do
-    p1 = [Problem.new(Declaration.new("a"), "objectA")]
-    p2 = [Problem.new(Declaration.new("a"), "objectA")]
-    pZZ = [Problem.new(Declaration.new("ZZ"), "objectZZ")]
-
-    assert{ ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(p1) }
-    
-    deny  { ResultOfGrammarApplication.new(p1) == ResultOfGrammarApplication.new(pZZ) }
-  end
-    
   test "rule" do
-    assert{ Rule.new(:a){declare("Must be red."){@color=="red"}} ==
-              Rule.new(:a){declare("Must be red."){@color=="red"}} }
+    assert{ RuleBuilder.new(:a){declare("Must be red."){@color=="red"}}.build ==
+              RuleBuilder.new(:a){declare("Must be red."){@color=="red"}}.build }
 
-    deny  { Rule.new(:a){declare("Must be red."){@color=="red"}} ==
-              Rule.new(:a){declare("Must be green."){@color=="green"}} }
-    deny  { Rule.new(:a){declare("Must be red."){@color=="red"}} ==
-              Rule.new(:ZZZ){declare("Must be red."){@color=="red"}} }
+    deny  { RuleBuilder.new(:a){declare("Must be red."){@color=="red"}}.build ==
+              RuleBuilder.new(:a){declare("Must be green."){@color=="green"}}.build }
+    deny  { RuleBuilder.new(:a){declare("Must be red."){@color=="red"}}.build ==
+              RuleBuilder.new(:ZZZ){declare("Must be red."){@color=="red"}}.build }
   end
 
   test "result of rule application - problems differ" do
@@ -63,8 +46,8 @@ regarding "prove value equality" do
   end
 
   test "rule declaration" do
-    assert { RuleDeclaration.new(:a) == RuleDeclaration.new(:a) }
-    deny   { RuleDeclaration.new(:a) == RuleDeclaration.new(:ZZ) }
+    assert { RuleDeclaration.new(:a, {}) == RuleDeclaration.new(:a, {}) }
+    deny   { RuleDeclaration.new(:a, {}) == RuleDeclaration.new(:ZZ, {}) }
   end
 
 end

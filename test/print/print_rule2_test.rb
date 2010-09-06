@@ -6,11 +6,11 @@ include Pinker
 
 regarding "declaration printing" do
   test "prints 'no message' if no message was provided." do
-    assert{ Declaration2.new.to_s == "declare:<no message>" }
+    assert{ Declaration.new.to_s == "declare:<no message>" }
   end
 
   test "prints the failure message if a message was provided." do
-    assert{ Declaration2.new("Must be red.").to_s == "declare:'Must be red.'" }
+    assert{ Declaration.new("Must be red.").to_s == "declare:'Must be red.'" }
   end
 
 end
@@ -22,7 +22,7 @@ regarding "problem printing" do
   regarding "problems looks nice with you to_s them" do
       
     test "simple" do
-      assert{ Problem.new(Declaration2.new("Must be red."), "blue").to_s == 
+      assert{ Problem.new(Declaration.new("Must be red."), "blue").to_s == 
                 %{'Must be red.':"blue"} }
     end
     

@@ -1,6 +1,6 @@
 require "./test/test_helper"
 
-require "pinker/rule"
+require "pinker/rule2"
 include Pinker
 
 regarding "problem message" do

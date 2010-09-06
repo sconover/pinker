@@ -40,7 +40,7 @@ regarding "a rule can have other rules" do
     #...be helpful
   regarding "is an object well-formed according to the grammar" do    
     test "not well-formed.  the shirt is tiny, but only large and small are allowed" do
-      assert{ @shirt_grammar.is_a?(Rule2) }
+      assert{ @shirt_grammar.is_a?(Rule) }
       result = @shirt_grammar.apply_to(Shirt.new("tiny", Color.new("red")))
       deny  { result.satisfied? }
       assert{ result.problems == 

@@ -2,7 +2,7 @@ require "pinker/print/print_support"
 
 module Pinker
   
-  class Rule2
+  class Rule
     def inspect(indent="")
       str = ArrayPrintSupport.inspect_array(@parts, indent, "Rule(#{@rule_key.inspect})")
       str << "\n" if indent.empty?
@@ -14,7 +14,7 @@ module Pinker
     end
   end
   
-  class Declaration2
+  class Declaration
     include PrintSupport
     
     def to_s

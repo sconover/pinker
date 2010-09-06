@@ -108,7 +108,7 @@ regarding "a rule" do
       
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
-                [Problem.new(Declaration2.new("Must be red."), Color.new("blue"))] 
+                [Problem.new(Declaration.new("Must be red."), Color.new("blue"))] 
       }
     end
     
@@ -136,7 +136,7 @@ regarding "a rule" do
       assert{ green_rule.apply_to(Color.new("green")).problems.empty? }
       assert{ 
         green_rule.apply_to(Color.new("blue")).problems == 
-          [Problem.new(Declaration2.new("Must be green."), Color.new("blue"))]
+          [Problem.new(Declaration.new("Must be green."), Color.new("blue"))]
       }
     end
 
@@ -178,16 +178,16 @@ regarding "a rule" do
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("red"))).problems.empty? }
   
       assert{ shirt_rule.apply_to(Shirt.new("large", Color.new("blue"))).problems ==
-                [Problem.new(Declaration2.new("Must be red."), Color.new("blue"))] 
+                [Problem.new(Declaration.new("Must be red."), Color.new("blue"))] 
       }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("red"))).problems ==
-                [Problem.new(Declaration2.new("Must be large."), 
+                [Problem.new(Declaration.new("Must be large."), 
                              Shirt.new("small", Color.new("red")))] 
       }
       assert{ shirt_rule.apply_to(Shirt.new("small", Color.new("blue"))).problems ==
                 [
-                  Problem.new(Declaration2.new("Must be red."), Color.new("blue")),
-                  Problem.new(Declaration2.new("Must be large."), 
+                  Problem.new(Declaration.new("Must be red."), Color.new("blue")),
+                  Problem.new(Declaration.new("Must be large."), 
                                               Shirt.new("small", Color.new("blue")))
                 ]
       }
@@ -248,15 +248,15 @@ end
 
 regarding "result of rule application" do
   test "merging with another result merges problems and memory" do
-    r1 = ResultOfRuleApplication2.new(
+    r1 = ResultOfRuleApplication.new(
            [Problem.new(Declaration.new("Must be red."), "blue")], 
            {:a => 1}
          )
-    r2 = ResultOfRuleApplication2.new(
+    r2 = ResultOfRuleApplication.new(
            [Problem.new(Declaration.new("Must be blue."), "green")], 
            {:b => 2}
          )
-    r3 = ResultOfRuleApplication2.new(
+    r3 = ResultOfRuleApplication.new(
            [Problem.new(Declaration.new("Must be orange."), "yellow")], 
            {:a => 3}
          )

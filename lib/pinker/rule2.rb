@@ -1,4 +1,4 @@
-require "pinker/rule"
+require "pinker/core"
 
 module Pinker
   
@@ -18,15 +18,15 @@ module Pinker
     end
     
     def declare(failure_message=nil, &block)
-      @parts << Declaration2.new(failure_message, &block)
+      @parts << Declaration.new(failure_message, &block)
     end
 
     def remember(&block)
-      @parts << Remembering2.new(&block)
+      @parts << Remembering.new(&block)
     end    
 
     def with_rule(rule_key, &block)
-      @parts << RuleDeclaration2.new(rule_key, @all_rules, &block)
+      @parts << RuleDeclaration.new(rule_key, @all_rules, &block)
     end
 
     def rule(rule_key, &block)
@@ -39,18 +39,20 @@ module Pinker
     def build
       @parts.empty? && !@local_rule_list.empty? ? 
         @local_rule_list.first : 
-        Rule2.new(@rule_key, @parts)
+        Rule.new(@rule_key, @parts)
     end
   end
   
-  class Rule2
+  class Rule
+    include ValueEquality
+    
     def initialize(rule_key, parts=[])
       @rule_key = rule_key
       @parts = parts
     end
 
     def apply_to(object, context={})
-      result = ResultOfRuleApplication2.new
+      result = ResultOfRuleApplication.new
       
       check_type(object, result) if @rule_key.is_a?(Class)
       
@@ -76,19 +78,19 @@ module Pinker
     end
   end
   
-  class AbstractDeclaration2
+  class AbstractDeclaration
     def _handle_result(result, actual_object)
-      if result.is_a?(ResultOfRuleApplication2)
+      if result.is_a?(ResultOfRuleApplication)
         result
       elsif result
-        ResultOfRuleApplication2.new([], {})
+        ResultOfRuleApplication.new([], {})
       else
-        ResultOfRuleApplication2.new([Problem.new(self, actual_object)], {})
+        ResultOfRuleApplication.new([Problem.new(self, actual_object)], {})
       end
     end
   end
   
-  class Declaration2 < AbstractDeclaration2
+  class Declaration < AbstractDeclaration
     attr_reader :failure_message
     
     def initialize(failure_message=nil, &block)
@@ -108,7 +110,7 @@ module Pinker
     #not elegant.  RF.
     
     def apply_to(actual_object, context={})
-      call = DeclarationCall2.new(self, actual_object)
+      call = DeclarationCall.new(self, actual_object)
       
       result = 
         if @block.arity<=0
@@ -137,13 +139,13 @@ module Pinker
   end
 
   
-  class DeclarationCall2
+  class DeclarationCall
     attr_reader :result
     
     def initialize(declaration, actual_object)
       @declaration = declaration
       @actual_object = actual_object
-      @result = ResultOfRuleApplication2.new([], {})
+      @result = ResultOfRuleApplication.new([], {})
       @failed = false
     end
     
@@ -163,7 +165,7 @@ module Pinker
   end
 
   
-  class RuleDeclaration2 < AbstractDeclaration2
+  class RuleDeclaration < AbstractDeclaration
     attr_reader :rule_key
     
     def initialize(rule_key, all_rules, &block)
@@ -181,7 +183,7 @@ module Pinker
     end
   end
 
-  class Remembering2
+  class Remembering
     def initialize(&block)
       @block = block
     end
@@ -196,12 +198,12 @@ module Pinker
       else
         raise "invalid arity"
       end
-      ResultOfRuleApplication2.new(problems=[], memory)
-    end    
+      ResultOfRuleApplication.new(problems=[], memory)
+    end        
   end
 
 
-  class ResultOfRuleApplication2
+  class ResultOfRuleApplication
     include ValueEquality
     
     attr_reader :problems, :memory
@@ -237,6 +239,39 @@ module Pinker
       @problems = problems
     end
   end
+
+  class Problem
+    attr_reader :declaration, :actual_object, :context, :details
+  
+    def initialize(declaration, actual_object, context={}, details={})
+      @declaration = declaration
+      @actual_object = actual_object
+      @context = context
+      @details = details
+    end
+    
+    def message
+      context_str = %{
+        actual_object = @actual_object
+        #{@context.keys.collect{|k|"#{k} = @context[:#{k}]"}.join("\n")}
+        
+      }
+    
+      if @declaration.failure_message
+        eval(context_str + '"' + @declaration.failure_message + '"')
+      else
+        inspect
+      end
+    end
+    
+    def ==(other)
+      @declaration == other.declaration &&
+      @actual_object == other.actual_object &&
+      @context == context
+    end
+  end
+
+
 
 end
 
