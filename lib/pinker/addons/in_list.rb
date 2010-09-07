@@ -1,12 +1,13 @@
 module Pinker
   module RuleBuilderAddons
-    module DeclareList
-      def declare_list(failure_message_proc=nil, &block)
+    module InList
+      def in_list(failure_message_proc=nil, &block)
         declare(failure_message_proc) { |call|
           list_results = self.instance_eval(&block)
+          list_results = {:allowed => list_results} if list_results.is_a?(Array)
           list_results[:actual] ||= self
           
-          DeclareList::LIST_RESULTS_RULE.apply_to(list_results).satisfied!
+          InList::LIST_RESULTS_RULE.apply_to(list_results).satisfied!
         
           allowed = list_results[:allowed]
           actual = Array(list_results[:actual])
@@ -18,10 +19,10 @@ module Pinker
           else
             failure_message_proc ||= 
               proc do |not_allowed, allowed|
-                DeclareList.list_to_str(not_allowed) +
+                InList.list_to_str(not_allowed) +
                 (not_allowed.length > 1 ? " are" : " is") +
                 " not allowed.  Valid values are " +
-                DeclareList.list_to_str(allowed) + 
+                InList.list_to_str(allowed) + 
                 "."
               end
               
@@ -50,15 +51,15 @@ module Pinker
       
       LIST_RESULTS_RULE =
         RuleBuilder.new(:list_results) {
-          declare("Bad declare_list.  You must return a hash containing the :allowed and :actual lists.") {
+          declare("Bad in_list.  You must return a hash containing the :allowed and :actual lists.") {
             self.key?(:actual) && self.key?(:allowed)
           }
       
-          declare("Bad declare_list.  :allowed was nil.  The expression of nothing should be an empty array.") {
+          declare("Bad in_list.  :allowed was nil.  The expression of nothing should be an empty array.") {
             !self[:allowed].nil?
           }
 
-          declare("Bad declare_list.  :actual was nil.  The expression of nothing should be an empty array.") {
+          declare("Bad in_list.  :actual was nil.  The expression of nothing should be an empty array.") {
             !self[:actual].nil?
           }
         }.build

@@ -1,19 +1,19 @@
 require "./test/test_helper"
 
 require "pinker/rule"
-require "pinker/addons/list"
+require "pinker/addons/in_list"
 include Pinker
 
 regarding "check that the supplied values are contained in a list of possible values" do
   
   class RuleBuilder
-    include RuleBuilderAddons::DeclareList
+    include RuleBuilderAddons::InList
   end
   
   before do
     @color_rule =
       RuleBuilder.new(:colors) {
-        declare_list{{:allowed => %w{red green blue}, :actual => self}}
+        in_list{{:allowed => %w{red green blue}, :actual => self}}
       }.build
   end
 
@@ -66,7 +66,7 @@ regarding "check that the supplied values are contained in a list of possible va
   test "custom failure message" do
     my_color_rule =
       RuleBuilder.new(:colors) {
-        declare_list(proc{|not_allowed, allowed|
+        in_list(proc{|not_allowed, allowed|
                        "not allowed: " + not_allowed.join(",") + " allowed: " + allowed.join(",")
                      }){
           {:allowed => %w{red green blue}, :actual => self}
@@ -81,36 +81,46 @@ regarding "check that the supplied values are contained in a list of possible va
   test "actual is self by default" do
     my_color_rule =
       RuleBuilder.new(:colors) {
-        declare_list{{:allowed => %w{red green blue}}}
+        in_list{{:allowed => %w{red green blue}}}
       }.build
 
     assert{ my_color_rule.apply_to(%w{blue}).satisfied? }
     deny  { my_color_rule.apply_to(%w{yellow}).satisfied? }
   end
   
-  regarding "bad declare_list situations" do
+  test "allowed is a simple array by default" do
+    my_color_rule =
+      RuleBuilder.new(:colors) {
+        in_list{%w{red green blue}}
+      }.build
+
+    assert{ my_color_rule.apply_to(%w{blue}).satisfied? }
+    deny  { my_color_rule.apply_to(%w{yellow}).satisfied? }
+  end
+  
+  regarding "bad in_list situations" do
   
     test "blows up if the results aren't in the expected format" do
       bad_list_rule =
         RuleBuilder.new(:colors) {
-          declare_list{{:zzz => %w{red green blue}, :yyy => self}}
+          in_list{{:zzz => %w{red green blue}, :yyy => self}}
         }.build
       
       assert{ rescuing{bad_list_rule.apply_to(%w{red green blue})}.message == 
-                "Bad declare_list.  You must return a hash containing the :allowed and :actual lists." }
+                "Bad in_list.  You must return a hash containing the :allowed and :actual lists." }
     end
 
     test "nil doesn't work (the expression of nothing is an empty array)" do
       nil_allowed_rule =
         RuleBuilder.new(:colors) {
-          declare_list{{:allowed => nil, :actual => [1]}}
+          in_list{{:allowed => nil, :actual => [1]}}
         }.build
 
       assert{ rescuing{nil_allowed_rule.apply_to(%w{red green blue})}.message == 
-                "Bad declare_list.  :allowed was nil.  The expression of nothing should be an empty array." }
+                "Bad in_list.  :allowed was nil.  The expression of nothing should be an empty array." }
 
       assert{ rescuing{@color_rule.apply_to(nil)}.message == 
-                "Bad declare_list.  :actual was nil.  The expression of nothing should be an empty array." }
+                "Bad in_list.  :actual was nil.  The expression of nothing should be an empty array." }
     end
     
   end  
