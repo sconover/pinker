@@ -15,6 +15,18 @@ regarding "declaration printing" do
 
 end
 
+regarding "rule declaration printing" do
+  test "basic" do
+    assert{ RuleDeclaration.new(:a, {}).to_s == "with_rule:a" }
+  end
+end
+
+regarding "remembering" do
+  test "basic" do
+    assert{ Remembering.new{}.to_s == "remember" }
+  end
+end
+
 regarding "problem printing" do
   class Color; end
   class Shirt; end

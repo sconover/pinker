@@ -23,6 +23,22 @@ module Pinker
     end
   end
   
+  class RuleDeclaration
+    include PrintSupport
+    
+    def to_s
+      "with_rule:#{rule_key.to_s}"
+    end
+  end
+  
+  class Remembering
+    include PrintSupport
+    
+    def to_s
+      "remember"
+    end
+  end
+  
   class Problem
     def inspect(indent="")
       indent + "'" + (@declaration.failure_message || "") + "'" + "\n" + 

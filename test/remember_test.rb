@@ -42,10 +42,16 @@ regarding "remember helps gather up things that get returned if the rule is vali
   end
   
   test "cache useful things across calls using context" do
-    rule =
+    the_rule =
       RuleBuilder.new(Request) {
         declare("Path must have at least three sections") { |call, context|
           (context[:path_parts]=@path_info.split("/")).length>=3
+        }
+        
+        with_rule(:text_is_widgets){|rule, context|rule.apply_to(context[:path_parts][2])}
+        
+        rule(:text_is_widgets) {
+          declare("Must be widgets"){self=="widgets"}
         }
         
         remember { |memory, context|
@@ -53,7 +59,8 @@ regarding "remember helps gather up things that get returned if the rule is vali
         }
       }.build
       
-    assert{ rule.apply_to(Request.new("/v1/widgets/foo")).memory == 
+    assert{ the_rule.apply_to(Request.new("/v1/widgets/foo")).satisfied? }
+    assert{ the_rule.apply_to(Request.new("/v1/widgets/foo")).memory == 
       {:resource_type => "widgets"} 
     }
   end

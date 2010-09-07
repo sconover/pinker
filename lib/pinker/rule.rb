@@ -8,6 +8,7 @@ module Pinker
       #what about warnings?
   
   class RuleBuilder
+    attr_reader :rule_key
     def initialize(rule_key, all_rules={}, &block)
       @rule_key = rule_key
       @parts = []
@@ -35,6 +36,10 @@ module Pinker
 
     def rule(rule_key, &block)
       rule = self.class.new(rule_key, @all_rules, &block).build
+      add_rule(rule_key, rule)
+    end
+
+    def add_rule(rule_key, rule)
       @all_rules[rule_key] = rule
       @local_rule_list << rule
       self
@@ -179,7 +184,13 @@ module Pinker
     end
     
     def apply_to(actual_object, context={})
-      _handle_result(actual_object.instance_exec(@all_rules[@rule_key], &@block), actual_object)
+      if @block.arity==1
+        _handle_result(actual_object.instance_exec(@all_rules[@rule_key], &@block), actual_object)
+      elsif @block.arity==2
+        _handle_result(actual_object.instance_exec(@all_rules[@rule_key], context, &@block), actual_object)
+      else
+        raise "invlid arity"
+      end
     end
     
     def ==(other)
