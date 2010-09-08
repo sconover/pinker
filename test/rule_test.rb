@@ -195,7 +195,7 @@ regarding "a rule" do
 
   end
 
-    regarding "typing and nil" do
+  regarding "typing and nil" do
     
     class Shade < Color
     end
@@ -243,7 +243,22 @@ regarding "a rule" do
 
   end
 
-  
+  regarding "replace self / actual object" do
+    
+    test "converts self" do
+      converting_rule =
+        RuleBuilder.new(:convert) {
+          declare{self.is_a?(String)}
+          change_self_to{self.to_i}
+          declare{self.is_a?(Integer) && self > 0}
+        }.build
+        
+      assert{ converting_rule.apply_to("7").satisfied? }
+      deny  { converting_rule.apply_to("ZZ").satisfied? }
+      deny  { converting_rule.apply_to(7).satisfied? }
+    end
+    
+  end
 end
 
 regarding "result of rule application" do

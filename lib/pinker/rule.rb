@@ -25,7 +25,11 @@ module Pinker
     def declare(failure_message=nil, &block)
       self << Declaration.new(failure_message, &block)
     end
-
+    
+    def change_self_to(&block)
+      self << ChangeSelf.new(&block)
+    end
+    
     def remember(&block)
       self << Remembering.new(&block)
     end    
@@ -66,19 +70,30 @@ module Pinker
       check_type(object, result) if @rule_key.is_a?(Class)
       
       @parts.each do |part|
+        local_result = nil
         if result.satisfied?
-          result.merge!(part.apply_to(object, context))
+          local_result = part.apply_to(object, context)
         else
           begin
-            result.merge!(part.apply_to(object, context))
+            local_result = part.apply_to(object, context)
           rescue StandardError => intentionally_swallow_because_of_best_effort
           end  
         end
+        
+        if part.is_a?(ChangeSelf)
+          object = local_result
+        else
+          result.merge!(local_result) if local_result
+        end
+        
       end
       result
     end
     
     private
+    def apply(part, object, context, result)
+    end
+    
     def check_type(object, result)
       klass = @rule_key
       unless object.nil? || !klass.is_a?(Class) || object.is_a?(klass)
@@ -214,6 +229,16 @@ module Pinker
         raise "invalid arity"
       end
       ResultOfRuleApplication.new(problems=[], memory)
+    end        
+  end
+  
+  class ChangeSelf
+    def initialize(&block)
+      @block = block
+    end
+    
+    def apply_to(actual_object, context={})
+      actual_object.instance_eval(&@block)
     end        
   end
 
