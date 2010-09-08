@@ -29,6 +29,10 @@ module Pinker
     def change_self_to(&block)
       self << ChangeSelf.new(&block)
     end
+
+    def choice(*parts)
+      self << Choice.new(parts)
+    end
     
     def remember(&block)
       self << Remembering.new(&block)
@@ -239,6 +243,16 @@ module Pinker
     
     def apply_to(actual_object, context={})
       actual_object.instance_eval(&@block)
+    end        
+  end
+
+  class Choice
+    def initialize(possibilities)
+      @possibilities = possibilities
+    end
+    
+    def apply_to(actual_object, context={})
+      possibilities.find{|possibility|possibility.apply_to(actual_object, context)}
     end        
   end
 
