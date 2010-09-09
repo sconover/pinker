@@ -20,16 +20,6 @@ module Pinker
           end
         }
         
-        change_self_to{
-          type_result = self.instance_eval(&block)
-          
-          if type_result.is_a?(Hash) && type_result.key?(:type) && type_result.key?(:value)
-            self
-          else
-            eval("#{type_result.name}(self)")
-          end
-        }
-        
       end
       
     end
