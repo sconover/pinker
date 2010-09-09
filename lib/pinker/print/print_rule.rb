@@ -41,7 +41,7 @@ module Pinker
   
   class Problem
     def inspect(indent="")
-      indent + "'" + (@declaration.failure_message || "") + "'" + "\n" + 
+      indent + "'" + (@declaration.respond_to?(:failure_message) && @declaration.failure_message || "") + "'" + "\n" + 
       indent + "  ==> " + @actual_object.inspect
     end    
     
